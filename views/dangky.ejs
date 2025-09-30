@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng ký - myCARe</title>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
+    .register-container { background:#fff; padding:40px 30px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.2); width:350px; text-align:center; }
+    .register-container h2 { margin-bottom:25px; color:#2f6741; }
+    .register-container input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:16px; }
+    .register-container button { width:100%; padding:12px; margin:15px 0; border:none; border-radius:5px; background:#2f6741; color:#fff; font-size:16px; cursor:pointer; }
+    .register-container button:hover { background:#3e8e5a; }
+    .register-container .login-btn { background:#ccc; color:#333; }
+    .register-container .login-btn:hover { background:#bbb; }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Đăng ký myCARe</h2>
+    <form method="POST" action="/dangky">
+      <input type="text" name="username" placeholder="Tên đăng nhập" required>
+      <input type="password" name="password" placeholder="Mật khẩu" required>
+      <input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu" required>
+      <input type="text" name="sdt" placeholder="Số điện thoại" required>
+      <button type="submit">Đăng ký</button>
+    </form>
+    <button class="login-btn" onclick="window.location.href='/dangnhap'">Đăng nhập</button>
+  </div>
+</body>
+</html>

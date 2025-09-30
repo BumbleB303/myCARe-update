@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập - myCARe</title>
+  <style>
+    body { margin:0; font-family:Arial,sans-serif; background:#ffffff; display:flex; justify-content:center; align-items:center; height:100vh; }
+    .login-container { background:#67ba27; padding:40px 30px; border-radius:90px; box-shadow:0 4px 10px rgba(0,0,0,0.2); width:550px; text-align:center; }
+    .login-container h2 { margin-bottom:35px; color:#2f6741; }
+    .login-container input { width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid #ccc; font-size:16px; }
+    .login-container button { width:100%; padding:12px; margin:15px 0; border:none; border-radius:5px; background:#2f6741; color:#fff; font-size:16px; cursor:pointer; }
+    .login-container button:hover { background:#3e8e5a; }
+    .login-container .register-btn { background:#ccc; color:#333; }
+    .login-container .register-btn:hover { background:#bbb; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Đăng nhập myCARe</h2>
+    <form method="POST" action="/login">
+      <input type="text" name="username" placeholder="Tên đăng nhập" required>
+      <input type="password" name="password" placeholder="Mật khẩu" required>
+      <button type="submit">Đăng nhập</button>
+    </form>
+    <button class="register-btn" onclick="window.location.href='/dangky'">Đăng ký</button>
+  </div>
+</body>
+</html>

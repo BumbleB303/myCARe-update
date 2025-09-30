@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>myCARe - Trang chủ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    header { background: #95ce97; padding: 50px 80px; font-size: 24px; font-weight: bold; color: black; }
+    nav { display: flex; justify-content: space-between; align-items: center; background: #2f6741; padding: 20px 30px; }
+    .menu-left { display: flex; gap: 15px; }
+    .menu-left button { padding: 8px 15px; border: none; border-radius: 5px; background: #fff; cursor: pointer; font-weight: bold; }
+    .search-box { display: flex; flex-direction: column; position: relative; }
+    .search-box input { padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
+    .search-box button { margin-top: 5px; padding: 6px 12px; border: none; border-radius: 5px; background: #333; color: white; cursor: pointer; width: 100px; }
+
+    #container { display: flex; width: 100%; height: 500px; position: relative; }
+    #map { flex: 1; }
+    #sidebar {
+      width: 300px;
+      background: #f5f5f5;
+      border-left: 1px solid #ccc;
+      overflow-y: auto;
+      padding: 20px;
+      display: none;
+      box-sizing: border-box;
+    }
+    #sidebar img { max-width: 100%; margin-top: 10px; border-radius: 5px; }
+    #sidebar h2 { margin-top: 0; }
+    #sidebar button { margin-top: 10px; padding: 6px 12px; border: none; border-radius: 5px; background: #2f6741; color: #fff; cursor: pointer; }
+
+    #suggestions {
+      position: absolute;
+      top: 65px; 
+      left: 0;
+      width: 200px;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: none;
+      z-index: 1000;
+    }
+    #suggestions li { padding: 5px 10px; cursor: pointer; }
+    #suggestions li:hover { background: #eee; }
+  </style>
+</head>
+<body>
+  <header>myCARe</header>
+  <nav>
+    <div class="menu-left">
+      <button onclick="loadMarkers('tramsac')">Trạm sạc</button>
+      <button onclick="loadMarkers('ttsc')">Trung tâm sửa chữa</button>
+      <button onclick="loadMarkers('baidoxe')">Bãi đỗ xe</button>
+        <% if(!user){ %>
+          <button onclick="window.location.href='/dangnhap'">Đăng nhập</button>
+        <% } else { %>
+          <% if(user.role === 'quantrivien'){ %>
+            <button onclick="window.location.href='/quanly'">Trang quản lý</button>
+          <% } %>
+          <button onclick="window.location.href='/dangxuat'">Đăng xuất (<%= user.username %>)</button>
+        <% } %>
+
+    </div>
+    <div class="search-box">
+      <div style="display: flex; gap: 5px; align-items: center;">
+        <input id="search-input" type="text" placeholder="Nhập tên địa điểm..." autocomplete="off">
+        <button id="search-btn">Tìm kiếm</button>
+      </div>
+      <ul id="suggestions"></ul>
+    </div>
+  </nav>
+
+  <div id="container">
+    <div id="map"></div>
+    <div id="sidebar"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script>
+    var map = L.map('map').setView([21.0285, 105.8542], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+
+    var markersLayer = L.layerGroup().addTo(map);
+    var routeControl = null;
+    var sidebar = document.getElementById('sidebar');
+
+    var data = {
+      tramsac: <%- JSON.stringify(tramsac) %>,
+      ttsc: <%- JSON.stringify(ttsc) %>,
+      baidoxe: <%- JSON.stringify(baidoxe) %>
+    };
+
+    var allPlaces = [...data.tramsac, ...data.ttsc, ...data.baidoxe];
+
+    function loadMarkers(type) {
+      markersLayer.clearLayers();
+      if(routeControl) { map.removeControl(routeControl); routeControl = null; }
+      sidebar.style.display = 'none';
+
+      data[type].forEach(item => {
+        var popupContent = `
+          <b>${item.name || "Chưa cập nhật"}</b><br/>
+          <button onclick="showInfo(${JSON.stringify(item).replace(/"/g,'&quot;')})">Thông tin</button>
+          <button onclick="showRoute(${item.lat}, ${item.lng})">Dẫn đường</button>
+        `;
+        L.marker([item.lat, item.lng])
+          .bindPopup(popupContent)
+          .addTo(markersLayer);
+      });
+    }
+
+    function showInfo(item) {
+      sidebar.style.display = 'block';
+      sidebar.innerHTML = `
+        <h2>${item.name || "Chưa cập nhật"}</h2>
+        <p><b>Địa chỉ:</b> ${item.diachi || "Chưa cập nhật"}</p>
+        <p><b>Liên hệ:</b> ${item.lienhe || "Chưa cập nhật"}</p>
+        <p><b>Giờ mở cửa:</b> ${item.giomocua || "Chưa cập nhật"} - ${item.giodongcua || "Chưa cập nhật"}</p>
+        ${item.hinhtram ? `<img src="${item.hinhtram}" />` : ''}
+        <button onclick="sidebar.style.display='none'">Đóng</button>
+      `;
+    }
+
+    function showRoute(lat, lng) {
+      if (!navigator.geolocation) { alert('Trình duyệt không hỗ trợ định vị'); return; }
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var userLat = position.coords.latitude;
+        var userLng = position.coords.longitude;
+
+        if(routeControl) { map.removeControl(routeControl); }
+
+        routeControl = L.Routing.control({
+          waypoints: [
+            L.latLng(userLat, userLng),
+            L.latLng(lat, lng)
+          ],
+          routeWhileDragging: true,
+          show: true,
+          collapsible: true
+        }).addTo(map);
+      }, function(error){
+        alert('Không thể lấy vị trí hiện tại: ' + error.message);
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    }
+
+    
+    var input = document.getElementById('search-input');
+    var searchButton = document.getElementById('search-btn');
+    var suggestions = document.getElementById('suggestions');
+
+    input.addEventListener('input', function() {
+      var query = this.value.trim().toLowerCase();
+      suggestions.innerHTML = '';
+      if(query === '') { suggestions.style.display = 'none'; return; }
+
+      var matches = allPlaces.filter(p => p.name && p.name.toLowerCase().includes(query));
+      matches.forEach(p => {
+        var li = document.createElement('li');
+        li.textContent = p.name;
+        li.addEventListener('click', function() {
+          selectPlace(p);
+          suggestions.style.display = 'none';
+          input.value = p.name;
+        });
+        suggestions.appendChild(li);
+      });
+      suggestions.style.display = matches.length > 0 ? 'block' : 'none';
+    });
+
+    searchButton.addEventListener('click', function() {
+      var query = input.value.trim().toLowerCase();
+      if(!query) return;
+      var match = allPlaces.find(p => p.name && p.name.toLowerCase().includes(query));
+      if(match) selectPlace(match);
+      else alert('Không tìm thấy địa điểm');
+    });
+
+    function selectPlace(place) {
+      let found = false;
+      markersLayer.eachLayer(function(marker){
+        var mLatLng = marker.getLatLng();
+        if(mLatLng.lat === place.lat && mLatLng.lng === place.lng){
+          found = true;
+          marker.openPopup();
+        }
+      });
+
+      if(!found){
+        var popupContent = `
+          <b>${place.name || "Chưa cập nhật"}</b><br/>
+          <button onclick="showInfo(${JSON.stringify(place).replace(/"/g,'&quot;')})">Thông tin</button>
+          <button onclick="showRoute(${place.lat}, ${place.lng})">Dẫn đường</button>
+        `;
+        L.marker([place.lat, place.lng]).bindPopup(popupContent).addTo(markersLayer).openPopup();
+      }
+
+      map.setView([place.lat, place.lng], 17);
+      showInfo(place);
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý địa điểm</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .menu { margin-bottom: 20px; }
+    .menu button {
+      margin-right: 10px; padding: 10px 20px; cursor: pointer;
+      border: none; border-radius: 6px; background: #3498db; color: white; font-weight: bold;
+    }
+    .menu button:hover { background: #2980b9; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
+    .action-btn {
+      padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;
+    }
+    .edit-btn { background: #f39c12; color: white; }
+    .delete-btn { background: #e74c3c; color: white; }
+    .save-btn { background: #2ecc71; color: white; }
+    .cancel-btn { background: gray; color: white; }
+  </style>
+</head>
+<body>
+  <h2>Quản lý địa điểm</h2>
+
+  <div class="menu">
+    <button onclick="showTable('tramsac')">Trạm sạc</button>
+    <button onclick="showTable('trungtamsuachua')">Trung tâm sửa chữa</button>
+    <button onclick="showTable('baidoxe')">Bãi đỗ xe</button>
+    <button type="button" class="btn btn-success" onclick="window.location.href='/themdiadiem'">
+  Thêm địa điểm
+</button>
+
+
+  </div>
+
+  <div id="content"></div>
+
+  <script>
+    let currentType = "";
+
+    const columnMapping = {
+      tramsac: {
+        id: "ID",
+        tentram: "Tên trạm",
+        diachi: "Địa chỉ",
+        giomocua: "Giờ mở cửa",
+        giodongcua: "Giờ đóng cửa",
+        lienhe: "Liên hệ",
+        nhacungcap: "Nhà cung cấp",
+        hinhtram: "Hình trạm",
+        geom: "Vị trí"
+      },
+      trungtamsuachua: {
+        id: "ID",
+        tentt: "Tên trung tâm",
+        diachitt: "Địa chỉ",
+        giomott: "Giờ mở cửa",
+        giodongtt: "Giờ đóng cửa",
+        lienhett: "Liên hệ",
+        hinhanhtt: "Hình trung tâm",
+        geom: "Vị trí"
+      },
+      baidoxe: {
+        id: "ID",
+        tenbai: "Tên bãi đỗ",
+        diachi: "Địa chỉ",
+        lienhe: "Liên hệ",
+        hinhanhbai: "Hình bãi đỗ",
+        geom: "Vị trí"
+      }
+    };
+
+    async function showTable(type) {
+      currentType = type;
+      const res = await fetch(`/api/diadiem/${type}`);
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        document.getElementById('content').innerHTML = "<p>Không có dữ liệu</p>";
+        return;
+      }
+
+      let html = "<table><tr>";
+      Object.keys(data[0]).forEach(col => {
+        if (col !== "gid") {
+          html += `<th>${columnMapping[type][col] || col}</th>`;
+        }
+      });
+      html += "<th>Hành động</th></tr>";
+
+      data.forEach(row => {
+        html += `<tr id="row-${row.id}">`;
+        Object.entries(row).forEach(([key, val]) => {
+          if (key !== "gid") {
+            html += `<td data-col="${key}">${val || ""}</td>`;
+          }
+        });
+        html += `
+          <td>
+            <button class="action-btn edit-btn" onclick="editRow(${row.id})">Sửa</button>
+            <button class="action-btn delete-btn" onclick="deleteRow(${row.id})">Xóa</button>
+          </td>
+        </tr>`;
+      });
+
+      html += "</table>";
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function editRow(id) {
+      const row = document.getElementById(`row-${id}`);
+      const cells = row.querySelectorAll("td[data-col]");
+      cells.forEach(cell => {
+        const val = cell.innerText;
+        const col = cell.getAttribute("data-col");
+        if (col !== "id") { // Không cho sửa cột id
+          cell.innerHTML = `<input type="text" value="${val}" data-col="${col}">`;
+        }
+      });
+
+      const actionCell = row.querySelector("td:last-child");
+      actionCell.innerHTML = `
+        <button class="action-btn save-btn" onclick="saveRow(${id})">Lưu</button>
+        <button class="action-btn cancel-btn" onclick="showTable('${currentType}')">Hủy</button>
+      `;
+    }
+
+    async function saveRow(id) {
+      const row = document.getElementById(`row-${id}`);
+      const inputs = row.querySelectorAll("input");
+      let updatedData = { id };
+
+      inputs.forEach(input => {
+        updatedData[input.getAttribute("data-col")] = input.value;
+      });
+
+      const res = await fetch(`/api/diadiem/${currentType}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+
+      if (res.ok) {
+        alert("Cập nhật thành công!");
+        showTable(currentType);
+      } else {
+        alert("Lỗi khi cập nhật!");
+      }
+    }
+
+    async function deleteRow(id) {
+      if (!confirm("Bạn có chắc muốn xóa địa điểm này?")) return;
+
+      const res = await fetch(`/api/diadiem/${currentType}/${id}`, { method: "DELETE" });
+
+      if (res.ok) {
+        alert("Xóa thành công!");
+        showTable(currentType);
+      } else {
+        alert("Lỗi khi xóa!");
+      }
+    }
+  </script>
+</body>
+</html>
