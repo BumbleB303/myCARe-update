@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>myCARe - Phương tiện</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; overflow: auto; }
+    .left-panel { position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #fff; z-index: 1002; border-right: 1px solid #e6e9ee; padding: 24px; box-shadow: 2px 0 8px rgba(15,23,42,0.04); }
+    .left-panel .logo { font-family: 'Modak', cursive; font-size: 36px; background: linear-gradient(90deg, #1a73e8, #03f007); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 3px; }
+    .left-panel .desc { color: #6b7280; font-size: 15px; line-height: 1.5; margin: 16px 0; }
+    .main-content { position: absolute; top: 0; left: 320px; width: calc(100% - 320px); height: 100vh; padding: 24px; display: flex; flex-direction: column; }
+    .top-bar { display: flex; justify-content: flex-end; padding: 8px 0; margin-bottom: 20px; }
+    .nav-btn { background: #1a73e8; border: none; padding: 10px 20px; margin: 0 8px; color: #fff; font-size: 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-btn:hover { background: #1557b0; transform: translateY(-1px); color: #fff; }
+    .content-area { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 20px; margin-top: 20px; }
+    .card { width: 100%; max-width: 1000px; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(17,24,39,0.05); overflow: hidden; }
+    .card-header { background: #1a73e8; color: #fff; padding: 20px; font-size: 22px; font-weight: 600; }
+    .card-body { padding: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    .btn-primary { background: #1a73e8; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+    .btn-primary:hover { background: #1557b0; transform: translateY(-1px); }
+
+    /* Modal (small, centered) */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45); justify-content: center; align-items: center; z-index: 2000;
+    }
+    .modal-content {
+      background: #fff; padding: 20px; border-radius: 12px; width: 92%; max-width: 480px; box-shadow: 0 10px 30px rgba(2,6,23,0.12); position: relative;
+    }
+    .modal-title { font-size: 18px; font-weight: 600; color: #0f172a; text-align: left; margin-bottom: 12px; }
+    .close { position: absolute; top: 12px; right: 12px; font-size: 20px; cursor: pointer; color: #6b7280; border: none; background: none; }
+    .close:hover { color: #111827; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { font-weight: 500; color: #4b5563; margin-bottom: 6px; display: block; font-size: 14px; }
+    .form-input { width: 100%; padding: 8px 10px; font-size: 14px; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .form-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 4px rgba(26,115,232,0.08); outline: none; }
+
+    .btn-app { padding: 10px 16px; background: #1a73e8; color: #fff; border-radius: 8px; border: none; cursor: pointer; }
+    .btn-app:hover { background: #1557b0; transform: translateY(-1px); }
+
+    @media (max-width: 900px) { .left-panel { display: none; } .main-content { left: 0; width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <a href="/phuongtien" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Phương tiện</a>
+    <div class="desc">Quản lý danh sách phương tiện của bạn.</div>
+  </div>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="d-flex">
+        <a href="/" class="nav-btn">Về trang chủ</a>
+        <a href="/dangxuat" class="nav-btn">Đăng xuất</a>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card">
+        <div class="card-header">Quản lý phương tiện</div>
+        <div class="card-body">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; gap:12px; flex-wrap:wrap;">
+            <div style="font-size:14px; color:#6b7280;">Danh sách phương tiện của bạn</div>
+          </div>
+
+          <% if (vehicles && vehicles.length > 0) { %>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+              <button class="btn-primary" id="openAddBtnGrid" style="padding:10px 16px; font-size:15px;">➕ Thêm phương tiện</button>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+              <% vehicles.forEach((v, idx) => { %>
+                <div style="border:1px solid #e6e9ee; border-radius:12px; padding:12px; background:linear-gradient(180deg,#ffffff,#fbfdff); display:flex; gap:12px; align-items:center;">
+                  <div style="width:72px; height:64px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:#f8fafc; border-radius:8px; overflow:hidden;">
+                    <% if (v.hinh_anh_xe) { %>
+                      <img src="<%= v.hinh_anh_xe %>" alt="xe" style="width:100%; height:100%; object-fit:cover;" />
+                    <% } else { %>
+                      <div style="color:#9ca3af; font-size:12px;">No Image</div>
+                    <% } %>
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600; color:#0f172a; font-size:15px;"><%= v.bien_so %></div>
+                    <div style="color:#6b7280; font-size:13px; margin-top:4px;">
+                      <%= v.hang_xe || 'Chưa xác định' %> · <%= v.dong_xe || '-' %>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <a href="/thongtinphuongtien/<%= v.id %>" class="btn-primary" style="background:#0ea5e9; border:none; text-decoration:none; padding:8px 12px;">Xem thêm</a>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div style="text-align:center; padding:36px; color:#374151;">
+              <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Bạn chưa cập nhật phương tiện của mình</div>
+              <div style="color:#6b7280; margin-bottom:20px;">Thêm phương tiện để quản lý dễ dàng hơn.</div>
+              <button class="btn-primary" id="openAddBtn2" style="padding:12px 20px; font-size:15px;">➕ Thêm phương tiện</button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Thêm phương tiện -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeAdd">&times;</button>
+      <form action="/phuongtien" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Biển số</label>
+          <input name="bien_so" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hãng xe</label>
+          <input name="hang_xe" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dòng xe</label>
+          <input name="dong_xe" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ảnh xe (tùy chọn)</label>
+          <input type="file" name="hinh_anh_xe" accept="image/*" class="form-input" />
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="nav-btn" id="cancelAdd">Hủy</button>
+          <button type="submit" class="btn-app" style="margin-left:8px;">Lưu</button>
+        </div>
+        <div class="modal-title">Thêm phương tiện mới</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Sửa phương tiện -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeEdit">&times;</button>
+      <div class="modal-title">Sửa phương tiện</div>
+      <form id="editForm" action="" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Biển số</label>
+          <input id="edit_bien" name="bien_so" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hãng xe</label>
+          <input id="edit_hang" name="hang_xe" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dòng xe</label>
+          <input id="edit_dong" name="dong_xe" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ảnh xe (tùy chọn)</label>
+          <input type="file" name="hinh_anh_xe" accept="image/*" class="form-input" />
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="nav-btn" id="cancelEdit">Hủy</button>
+          <button type="submit" class="btn-app" style="margin-left:8px;">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const addModal = document.getElementById('addModal');
+    const openAddBtn = document.getElementById('openAddBtn');
+    const openAddBtn2 = document.getElementById('openAddBtn2');
+    const closeAdd = document.getElementById('closeAdd');
+    const cancelAdd = document.getElementById('cancelAdd');
+    function showAdd() { addModal.style.display = 'flex'; }
+    function hideAdd() { addModal.style.display = 'none'; }
+    if (openAddBtn) openAddBtn.addEventListener('click', showAdd);
+    if (openAddBtn2) openAddBtn2.addEventListener('click', showAdd);
+    if (closeAdd) closeAdd.addEventListener('click', hideAdd);
+    if (cancelAdd) cancelAdd.addEventListener('click', hideAdd);
+
+    // Edit modal logic
+    const editModal = document.getElementById('editModal');
+    const closeEdit = document.getElementById('closeEdit');
+    const cancelEdit = document.getElementById('cancelEdit');
+    const editForm = document.getElementById('editForm');
+    const edit_bien = document.getElementById('edit_bien');
+    const edit_hang = document.getElementById('edit_hang');
+    const edit_dong = document.getElementById('edit_dong');
+
+    function openEditModal(btn) {
+      const id = btn.dataset.id;
+      edit_bien.value = btn.dataset.bien || '';
+      edit_hang.value = btn.dataset.hang || '';
+      edit_dong.value = btn.dataset.dong || '';
+      editForm.action = '/phuongtien/sua/' + id;
+      editModal.style.display = 'flex';
+    }
+    function closeEditModal() { editModal.style.display = 'none'; }
+    if (closeEdit) closeEdit.addEventListener('click', closeEditModal);
+    if (cancelEdit) cancelEdit.addEventListener('click', closeEditModal);
+
+    const openAddBtnGrid = document.getElementById('openAddBtnGrid');
+    if (openAddBtnGrid) openAddBtnGrid.addEventListener('click', showAdd);
+
+    window.onclick = function(e) { if (e.target == addModal) hideAdd(); if (e.target == editModal) closeEditModal(); };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -3,47 +3,217 @@
 <head>
   <meta charset="UTF-8">
   <title>Trang quản trị - myCARe</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: #f4f6f9;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f0f2f5;
+      overflow: auto;
     }
-    .container {
-      margin-top: 80px;
+    .main-content, .content, .content-area { overflow-y: auto; }
+    /* sidebar*/
+    .left-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 100vh;
+      background: #fff;
+      z-index: 1002;
+      border-right: 1px solid #e6e9ee;
+      padding: 24px;
+      box-shadow: 2px 0 8px rgba(15,23,42,0.04);
+      overflow-y: auto;
+    }
+    .left-panel .logo {
+      font-family: 'Modak', cursive;
+      font-size: 36px;
+      background: linear-gradient(90deg, #1a73e8, #03f007);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+    }
+    .left-panel .desc {
+      color: #6b7280;
+      font-size: 15px;
+      line-height: 1.5;
+      margin: 16px 0;
+    }
+    
+    .nav-btn {
+      background: #1a73e8;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 8px;
+      color: #fff;
+      font-size: 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-btn:hover {
+      background: #1557b0;
+      transform: translateY(-1px);
+      color: #fff;
+    }
+    .btn-danger {
+      background: #dc2626;
+    }
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+    
+    .user-info {
+      margin-top: 300px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .user-info .name {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    .user-info .role {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+  
+    .main-content {
+      position: absolute;
+      top: 0;
+      left: 320px;
+      width: calc(100% - 320px);
+      height: 100vh;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .content-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .card {
+      width: 100%;
+      max-width: 600px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .card-header {
+      background: #1a73e8;
+      color: #fff;
+      padding: 20px;
       text-align: center;
+      font-size: 24px;
     }
-    h1 {
-      margin-bottom: 40px;
-      font-weight: bold;
-      color: #333;
+    .card-body {
+      padding: 30px;
+      background: #fff;
+      text-align: center;
     }
     .btn-custom {
       width: 250px;
-      margin: 15px;
-      padding: 15px;
       font-size: 18px;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+      transition: transform 0.2s;
+    }
+    .btn-custom:hover {
+      transform: scale(1.05);
+    }
+    .btn-primary {
+      background-color: #1a73e8;
+      border-color: #1a73e8;
+    }
+    .btn-success {
+      background-color: #1a73e8;
+      border-color: #1a73e8;
+    }
+    .btn-secondary {
+      background-color: #00172b;
+      border-color: #6c757d;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .content { width: 100%; left: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Trang quản trị hệ thống</h1>
-
-    <div>
-      <a href="/quanly/diadiem" class="btn btn-primary btn-custom">
-        Quản lý địa điểm
-      </a>
-      <a href="/quanly/nguoidung" class="btn btn-success btn-custom">
-        Quản lý người dùng
-      </a>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <div class="desc">
+      Trang quản lý hệ thống myCARe. Quản lý các địa điểm và tài khoản.
+    </div>
+    <div class="desc" style="margin-top:32px;">
+      Các chức năng:
+      <ul style="margin-top:8px; color:#374151;">
+        <li>• Quản lý địa điểm</li>
+        <li>• Quản lý tài khoản</li>
+        <li>• Cài đặt hệ thống</li>
+      </ul>
     </div>
 
-    <div style="margin-top: 40px;">
-      <a href="/" class="btn btn-secondary">Về trang chủ</a>
-      <a href="/dangxuat" class="btn btn-danger">Đăng xuất</a>
+    <div class="user-info">
+      <% if (!user) { %>
+        <div style="text-align:center;">
+          <div style="margin-bottom:8px; color:#1f2937; font-weight:600;">Khách</div>
+          <a class="nav-btn" href="/dangnhap" style="display:inline-block;">Đăng nhập</a>
+        </div>
+      <% } else { %>
+        <div class="name"><%= user.tentaikhoan %></div>
+        <div class="role"><%= user.role === 'quantrivien' ? 'Quản trị viên' : 'Người dùng' %></div>
+      <% } %>
     </div>
   </div>
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="logo" style="color: #1f2937; font-size: 24px; font-weight: 600;">
+        Trang quản trị hệ thống
+      </div>
+      <div class="d-flex">
+        <a href="/dangxuat" class="nav-btn btn-danger">Đăng xuất</a>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card">
+        <div class="card-header">
+          Các chức năng quản trị
+        </div>
+        <div class="card-body">
+          <div class="d-flex flex-column align-items-center gap-3">
+            <a href="/quanly/diadiem" class="btn btn-primary btn-custom">
+              Quản lý địa điểm
+            </a>
+            <a href="/quanly/nguoidung" class="btn btn-primary btn-custom">
+              Quản lý tài khoản
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

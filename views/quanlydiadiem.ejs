@@ -2,124 +2,336 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Quản lý địa điểm</title>
+  <title>Quản lý địa điểm - myCARe</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .menu { margin-bottom: 20px; }
+  body { margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; overflow: auto; }
+  .content, .main-content, .content-area { overflow-y: auto; }
+    
+    .left-panel {
+      position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #fff; z-index: 1002;
+      border-right: 1px solid #e6e9ee; padding: 24px; box-shadow: 2px 0 8px rgba(15,23,42,0.04);
+    }
+    .left-panel .logo {
+      font-family: 'Modak', cursive;
+      font-size: 36px;
+      background: linear-gradient(90deg, #1a73e8, #03f007);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+    }
+    .left-panel .desc { color: #6b7280; font-size: 15px; line-height: 1.5; margin: 16px 0; }
+    
+    .main-content {
+      position: absolute; top: 0; left: 320px; width: calc(100% - 320px); height: 100vh; padding: 24px;
+      display: flex; flex-direction: column;
+    }
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    }
+    .nav-btn {
+      background: #1a73e8; border: none; padding: 10px 20px; margin: 0 8px; color: #fff;
+      font-size: 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+    }
+    .nav-btn:hover { background: #1557b0; transform: translateY(-1px); }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .menu { display: flex; gap: 12px; margin-bottom: 24px; }
     .menu button {
-      margin-right: 10px; padding: 10px 20px; cursor: pointer;
-      border: none; border-radius: 6px; background: #3498db; color: white; font-weight: bold;
+      padding: 10px 20px; border: none; border-radius: 6px; background: #1a73e8; color: #fff;
+      font-weight: 500; font-size: 15px; cursor: pointer; transition: all 0.2s;
     }
-    .menu button:hover { background: #2980b9; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    table, th, td { border: 1px solid #ccc; }
-    th, td { padding: 8px; text-align: center; }
-    th { background: #f4f4f4; }
+
+    .user-info {
+      margin-top: 255px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .user-info .name {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    .user-info .role {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .menu button:hover { background: #1557b0; transform: translateY(-1px); }
+    .add-btn { 
+      background: #2f6741; padding: 10px 20px; border-radius: 6px; color: #fff;
+      text-decoration: none; transition: all 0.2s; font-weight: 500;
+    }
+    .add-btn:hover { background: #1f462b; transform: translateY(-1px); color: #fff; }
+
+    table { 
+      width: 100%; border-collapse: separate; border-spacing: 0; background: #fff;
+      border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(17,24,39,0.05);
+    }
+    th, td { 
+      padding: 16px; text-align: center; border-bottom: 1px solid #e5e7eb;
+      font-size: 14px; color: #374151;
+    }
+    th { 
+      background: #1a73e8; color: #fff; font-weight: 600; text-transform: uppercase;
+      font-size: 13px; letter-spacing: 0.5px;
+    }
+    tr:nth-child(even) { background: #f9fafb; }
+    tr:hover { background: #f3f4f6; }
+
     .action-btn {
-      padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;
+      padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; 
+      margin: 0 4px; transition: all 0.2s; font-size: 14px;
+      display: inline-flex; align-items: center; gap: 6px;
     }
-    .edit-btn { background: #f39c12; color: white; }
-    .delete-btn { background: #e74c3c; color: white; }
-    .save-btn { background: #2ecc71; color: white; }
-    .cancel-btn { background: gray; color: white; }
+    .edit-btn { background: #f59e0b; color: #fff; }
+    .edit-btn:hover { background: #d97706; transform: translateY(-1px); }
+    .delete-btn { background: #ef4444; color: #fff; }
+    .delete-btn:hover { background: #dc2626; transform: translateY(-1px); }
+    .save-btn { background: #10b981; color: #fff; }
+    .save-btn:hover { background: #059669; transform: translateY(-1px); }
+    .cancel-btn { background: #6b7280; color: #fff; }
+    .cancel-btn:hover { background: #4b5563; transform: translateY(-1px); }
+    .service-btn { background: #3b82f6; color: #fff; }
+    .service-btn:hover { background: #2563eb; transform: translateY(-1px); }
+
+    .no-data { 
+      text-align: center; color: #6b7280; padding: 32px;
+      font-size: 16px; background: #fff; border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(17,24,39,0.05);
+    }
+
+    .modal { 
+      display: none; position: fixed; width: 600px; background: #fff;
+      border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      z-index: 1002; padding: 24px; max-height: 80vh; overflow-y: auto;
+    }
+    .modal-header { 
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-header h5 { 
+      margin: 0; font-size: 20px; color: #111827; font-weight: 600;
+    }
+    .close-btn {
+      background: none; border: none; font-size: 24px; cursor: pointer;
+      color: #6b7280; transition: color 0.2s; padding: 4px;
+    }
+    .close-btn:hover { color: #111827; }
+    
+    .service-table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      margin-top: 16px; border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .service-table th {
+      background: #1a73e8; color: #fff; font-weight: 600;
+      padding: 12px; font-size: 13px; text-transform: uppercase;
+    }
+    .service-table td {
+      padding: 12px; border-bottom: 1px solid #e5e7eb;
+      font-size: 14px; color: #374151;
+    }
+    .service-table tr:last-child td { border-bottom: none; }
+    .service-table tr:nth-child(even) { background: #f9fafb; }
+    .service-table tr:hover { background: #f3f4f6; }
+
+    .add-service-btn {
+      background: #2f6741; color: #fff; padding: 10px 20px;
+      border: none; border-radius: 6px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; margin-top: 16px;
+      display: inline-block;
+    }
+    .add-service-btn:hover {
+      background: #1f462b; transform: translateY(-1px);
+    }
+
+    .overlay {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+      z-index: 1001; backdrop-filter: blur(4px);
+    }
+
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .main-content { left: 0; width: 100%; }
+      .menu { flex-wrap: wrap; }
+      .modal { width: 90%; max-width: 600px; margin: 20px; }
+    }
   </style>
 </head>
 <body>
-  <h2>Quản lý địa điểm</h2>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <div class="desc">
+      Quản lý các địa điểm dịch vụ xe điện trên toàn Hà Nội.
+    </div>
+    <div class="desc" style="margin-top:32px;">
+      Các chức năng:
+      <ul style="margin-top:8px; color:#374151;">
+        <li>• Xem danh sách địa điểm</li>
+        <li>• Chỉnh sửa thông tin</li>
+        <li>• Quản lý dịch vụ</li>
+        <li>• Thêm địa điểm mới</li>
+        <li>• Cập nhật hình ảnh</li>
+      </ul>
+    </div>
 
-  <div class="menu">
-    <button onclick="showTable('tramsac')">Trạm sạc</button>
-    <button onclick="showTable('trungtamsuachua')">Trung tâm sửa chữa</button>
-    <button onclick="showTable('baidoxe')">Bãi đỗ xe</button>
-    <button type="button" class="btn btn-success" onclick="window.location.href='/themdiadiem'">
-  Thêm địa điểm
-</button>
-
+    <div class="user-info">
+      <% if (!user) { %>
+        <div style="text-align:center;">
+          <div style="margin-bottom:8px; color:#1f2937; font-weight:600;">Khách</div>
+          <a class="nav-btn" href="/dangnhap" style="display:inline-block;">Đăng nhập</a>
+        </div>
+      <% } else { %>
+        <div class="name"><%= user.tentaikhoan %></div>
+        <div class="role"><%= user.role === 'quantrivien' ? 'Quản trị viên' : 'Người dùng' %></div>
+      <% } %>
+    </div>
 
   </div>
 
-  <div id="content"></div>
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="logo">Quản lý địa điểm</div>
+      <div class="d-flex">
+        <a href="/quanly" class="nav-btn">Quay lại</a>
+        <a href="/dangxuat" class="nav-btn btn-danger">Đăng xuất</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <button onclick="showTable('tramsac')">
+        <i class="fas fa-charging-station me-2"></i>Trạm sạc
+      </button>
+      <button onclick="showTable('ttsc')">
+        <i class="fas fa-tools me-2"></i>Trung tâm sửa chữa
+      </button>
+      <button onclick="showTable('baidoxe')">
+        <i class="fas fa-parking me-2"></i>Bãi đỗ xe
+      </button>
+      <button onclick="showTable('ttdk')">
+        <i class="fas fa-certificate me-2"></i>Đăng kiểm
+      </button>
+      <a href="/themdiadiem" class="add-btn">
+        <i class="fas fa-plus me-2"></i>Thêm địa điểm
+      </a>
+    </div>
+    <div id="content"></div>
+  </div>
+
+  <div id="service-modal" class="modal">
+    <div class="modal-header">
+      <h5>Bảng giá dịch vụ</h5>
+      <button class="close-btn" onclick="closeServiceModal()">&times;</button>
+    </div>
+    <div id="service-content"></div>
+    <button class="action-btn add-service-btn" id="add-service-btn" onclick="addServiceRow()">Thêm dịch vụ</button>
+  </div>
+  <div class="overlay" id="service-overlay"></div>
 
   <script>
     let currentType = "";
+    let currentPlaceId = null;
+    let newServiceRowId = 0;
 
     const columnMapping = {
-      tramsac: {
-        id: "ID",
-        tentram: "Tên trạm",
-        diachi: "Địa chỉ",
-        giomocua: "Giờ mở cửa",
-        giodongcua: "Giờ đóng cửa",
-        lienhe: "Liên hệ",
-        nhacungcap: "Nhà cung cấp",
-        hinhtram: "Hình trạm",
-        geom: "Vị trí"
-      },
-      trungtamsuachua: {
-        id: "ID",
-        tentt: "Tên trung tâm",
-        diachitt: "Địa chỉ",
-        giomott: "Giờ mở cửa",
-        giodongtt: "Giờ đóng cửa",
-        lienhett: "Liên hệ",
-        hinhanhtt: "Hình trung tâm",
-        geom: "Vị trí"
-      },
-      baidoxe: {
-        id: "ID",
-        tenbai: "Tên bãi đỗ",
-        diachi: "Địa chỉ",
-        lienhe: "Liên hệ",
-        hinhanhbai: "Hình bãi đỗ",
-        geom: "Vị trí"
-      }
+      tramsac: { gid: "ID", tentram: "Tên trạm", diachi: "Địa chỉ", giomocua: "Giờ mở cửa", giodongcua: "Giờ đóng cửa", lienhe: "Liên hệ", nhacungcap: "Nhà cung cấp", hinhtram: "Hình trạm", lat: "Vĩ độ", lon: "Kinh độ" },
+      ttsc: { gid: "ID", tentt: "Tên trung tâm", diachitt: "Địa chỉ", giomott: "Giờ mở cửa", giodongtt: "Giờ đóng cửa", lienhett: "Liên hệ", hinhanhtt: "Hình trung tâm", lat: "Vĩ độ", lon: "Kinh độ" },
+      baidoxe: { gid: "ID", tenbai: "Tên bãi đỗ", diachi: "Địa chỉ", giomocua: "Giờ mở cửa", giodongcua: "Giờ đóng cửa", hinhanhbai: "Hình bãi đỗ", lat: "Vĩ độ", lon: "Kinh độ" },
+      ttdk: { gid: "ID", tenttdk: "Tên trung tâm", diachi: "Địa chỉ", giomocua: "Giờ mở cửa", giodongcua: "Giờ đóng cửa", lienhe: "Liên hệ", hinhanh: "Hình ảnh", lat: "Vĩ độ", lon: "Kinh độ" }
     };
 
     async function showTable(type) {
       currentType = type;
-      const res = await fetch(`/api/diadiem/${type}`);
-      const data = await res.json();
-
-      if (!Array.isArray(data) || data.length === 0) {
-        document.getElementById('content').innerHTML = "<p>Không có dữ liệu</p>";
-        return;
-      }
-
-      let html = "<table><tr>";
-      Object.keys(data[0]).forEach(col => {
-        if (col !== "gid") {
-          html += `<th>${columnMapping[type][col] || col}</th>`;
+      console.log("Fetching data for type:", type);
+      try {
+        const res = await fetch(`/api/diadiem/${type}`);
+        console.log("API response status:", res.status);
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}, Message: ${res.statusText}`);
+        const data = await res.json();
+        console.log("Fetched data:", data);
+        if (!Array.isArray(data) || data.length === 0) {
+          document.getElementById('content').innerHTML = "<div class='no-data'>Không có dữ liệu</div>";
+          return;
         }
-      });
-      html += "<th>Hành động</th></tr>";
 
-      data.forEach(row => {
-        html += `<tr id="row-${row.id}">`;
-        Object.entries(row).forEach(([key, val]) => {
-          if (key !== "gid") {
-            html += `<td data-col="${key}">${val || ""}</td>`;
+        let html = "<table><tr><th>STT</th>";
+        Object.keys(data[0]).forEach(col => {
+          if (col !== "gid") {
+            html += `<th>${columnMapping[type][col] || col}</th>`;
           }
         });
-        html += `
-          <td>
-            <button class="action-btn edit-btn" onclick="editRow(${row.id})">Sửa</button>
-            <button class="action-btn delete-btn" onclick="deleteRow(${row.id})">Xóa</button>
-          </td>
-        </tr>`;
-      });
+        html += "<th>Hành động</th></tr>";
 
-      html += "</table>";
-      document.getElementById('content').innerHTML = html;
+        data.forEach((row, index) => {
+          const lat = row.lat ? parseFloat(row.lat).toFixed(6) : "Không xác định";
+          const lon = row.lon ? parseFloat(row.lon).toFixed(6) : "Không xác định";
+          const rowId = row.gid;
+          const imageCol = type === "tramsac" ? "hinhtram" : type === "ttsc" ? "hinhanhtt" : "hinhanhbai";
+          const imageUrl = row[imageCol] ? row[imageCol] : "";
+
+          html += `<tr id="row-${rowId}">`;
+          html += `<td>${index + 1}</td>`; // Thêm STT
+          Object.entries(row).forEach(([key, val]) => {
+            if (key !== "gid") {
+              if (key === "lat" || key === "lon") {
+                html += `<td data-col="${key}">${key === "lat" ? lat : lon}</td>`;
+              } else if (key === imageCol) {
+                html += `<td data-col="${key}">${imageUrl ? `<img src="${imageUrl}" alt="Hình ảnh" style="max-width: 100px; max-height: 100px;">` : ""}</td>`;
+              } else {
+                html += `<td data-col="${key}">${val || ""}</td>`;
+              }
+            }
+          });
+          html += `
+            <td>
+                <button class="action-btn edit-btn" onclick="editRow(${rowId})" title="Sửa">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete-btn" onclick="deleteRow(${rowId})" title="Xóa">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+                <button class="action-btn service-btn" onclick="openServiceModal('${type}', ${rowId})" title="Dịch vụ">
+                  <i class="fas fa-concierge-bell"></i>
+                </button>
+              </td>`;
+        });
+
+        html += "</table>";
+        document.getElementById('content').innerHTML = html;
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu:", err);
+        document.getElementById('content').innerHTML = `<div class='no-data'>Lỗi khi tải dữ liệu: ${err.message}</div>`;
+      }
     }
 
     function editRow(id) {
       const row = document.getElementById(`row-${id}`);
+      if (!row) {
+        console.error(`Row with id ${id} not found`);
+        return;
+      }
       const cells = row.querySelectorAll("td[data-col]");
       cells.forEach(cell => {
         const val = cell.innerText;
         const col = cell.getAttribute("data-col");
-        if (col !== "id") { // Không cho sửa cột id
-          cell.innerHTML = `<input type="text" value="${val}" data-col="${col}">`;
+        if (col !== "gid") { 
+          if (col === "hinhtram" || col === "hinhanhtt" || col === "hinhanhbai") {
+            cell.innerHTML = `<input type="file" data-col="${col}" name="${col}" accept="image/*"><br><span>${val ? `<img src="${val}" alt="Hình ảnh" style="max-width: 100px; max-height: 100px;">` : "Chưa có hình"}</span>`;
+          } else if (col === "lat" || col === "lon") {
+            cell.innerHTML = `<input type="number" step="0.000001" value="${val === 'Không xác định' ? '' : val}" data-col="${col}" name="${col}">`;
+          } else {
+            cell.innerHTML = `<input type="text" value="${val}" data-col="${col}" name="${col}">`;
+          }
         }
       });
 
@@ -132,39 +344,286 @@
 
     async function saveRow(id) {
       const row = document.getElementById(`row-${id}`);
-      const inputs = row.querySelectorAll("input");
-      let updatedData = { id };
+      if (!row) {
+        alert("Không tìm thấy hàng để lưu!");
+        return;
+      }
+      const formData = new FormData();
 
-      inputs.forEach(input => {
-        updatedData[input.getAttribute("data-col")] = input.value;
+      const cells = row.querySelectorAll("td[data-col]");
+      cells.forEach(cell => {
+        const col = cell.getAttribute("data-col");
+        const input = cell.querySelector("input");
+        if (col !== "gid" && input) {
+          if (col === "hinhtram" || col === "hinhanhtt" || col === "hinhanhbai") {
+            if (input.files && input.files[0]) {
+              formData.append(col, input.files[0]);
+            } else {
+              const currentValue = row.querySelector(`td[data-col="${col}"] span img`)?.getAttribute("src") || "";
+              if (currentValue) formData.append(col, currentValue);
+            }
+          } else {
+            const val = input.value ? input.value.trim() : "";
+            if (val || (col === "lat" || col === "lon")) {
+              formData.append(col, val);
+            }
+          }
+        }
       });
 
-      const res = await fetch(`/api/diadiem/${currentType}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData)
-      });
+      formData.append("gid", id);
 
-      if (res.ok) {
+      try {
+        const res = await fetch(`/api/diadiem/${currentType}/${id}`, {
+          method: "PUT",
+          body: formData
+        });
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP error! Status: ${res.status}, Message: ${errorText}`);
+        }
+        const result = await res.json();
+        console.log("Update response:", result);
         alert("Cập nhật thành công!");
         showTable(currentType);
-      } else {
-        alert("Lỗi khi cập nhật!");
+      } catch (err) {
+        console.error("Lỗi khi lưu:", err);
+        alert(`Lỗi khi cập nhật: ${err.message}`);
       }
     }
 
     async function deleteRow(id) {
       if (!confirm("Bạn có chắc muốn xóa địa điểm này?")) return;
 
-      const res = await fetch(`/api/diadiem/${currentType}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${window.location.origin}/api/diadiem/${currentType}/${id}`, { method: "DELETE" });
 
       if (res.ok) {
         alert("Xóa thành công!");
         showTable(currentType);
       } else {
-        alert("Lỗi khi xóa!");
+        const errorText = await res.text();
+        alert(`Lỗi khi xóa: ${errorText || "Không xác định"}`);
       }
     }
-  </script>
+
+    async function openServiceModal(type, placeId) {
+      currentType = type;
+      currentPlaceId = placeId;
+      const overlay = document.getElementById('service-overlay');
+      const modal = document.getElementById('service-modal');
+      const content = document.getElementById('service-content');
+      const addServiceBtn = document.getElementById('add-service-btn');
+
+      overlay.style.display = 'block';
+      modal.style.display = 'block';
+
+      // Luôn tạo bảng dịch vụ
+      let html = "<table class='service-table'><tr>";
+      html += "<th>Tên dịch vụ</th><th>Giá (VNĐ)</th><th>Hành động</th></tr></table>";
+
+      try {
+        const res = await fetch(`${window.location.origin}/api/dichvu/${type}/${placeId}`);
+        if (!res.ok) {
+          content.innerHTML = html + `<div class='no-data'>Lỗi khi tải dịch vụ: ${res.status} - ${res.statusText}</div>`;
+        } else {
+          const services = await res.json();
+
+          if (!Array.isArray(services) || services.length === 0) {
+            content.innerHTML = html + "<div class='no-data'>Hiện chưa có dịch vụ nào</div>";
+          } else {
+            let tableContent = "<table class='service-table'><tr>";
+            tableContent += "<th>Tên dịch vụ</th><th>Giá (VNĐ)</th><th>Hành động</th></tr>";
+
+            services.forEach(service => {
+              tableContent += `<tr id="service-row-${service.id}">`;
+              tableContent += `
+                <td data-col="tendichvu">${service.tendichvu || ""}</td>
+                <td data-col="gia">${service.gia ? service.gia.toLocaleString('vi-VN') : ""}</td>
+                <td>
+                  <button class="action-btn edit-btn" onclick="editService(${service.id})">Sửa</button>
+                  <button class="action-btn delete-btn" onclick="deleteService(${service.id})">Xóa</button>
+                </td>
+              </tr>`;
+            });
+
+            tableContent += "</table>";
+            content.innerHTML = tableContent;
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi khi mở modal dịch vụ:", err);
+        content.innerHTML = html + `<div class='no-data'>Lỗi khi tải dịch vụ: ${err.message}</div>`;
+      }
+
+      // Đảm bảo nút "Thêm dịch vụ" luôn hiển thị
+      addServiceBtn.style.display = 'block';
+
+      let isDragging = false;
+      let currentX;
+      let currentY;
+      let initialX;
+      let initialY;
+
+      modal.addEventListener('mousedown', startDragging);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', stopDragging);
+
+      function startDragging(e) {
+        initialX = e.clientX - currentX;
+        initialY = e.clientY - currentY;
+        isDragging = true;
+      }
+
+      function drag(e) {
+        if (isDragging) {
+          e.preventDefault();
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+          modal.style.left = currentX + 'px';
+          modal.style.top = currentY + 'px';
+        }
+      }
+
+      function stopDragging() {
+        isDragging = false;
+      }
+
+      currentX = (window.innerWidth - modal.offsetWidth) / 2;
+      currentY = (window.innerHeight - modal.offsetHeight) / 2;
+      modal.style.left = currentX + 'px';
+      modal.style.top = currentY + 'px';
+    }
+
+    function closeServiceModal() {
+      const overlay = document.getElementById('service-overlay');
+      const modal = document.getElementById('service-modal');
+      overlay.style.display = 'none';
+      modal.style.display = 'none';
+    }
+
+    function editService(id) {
+      const row = document.getElementById(`service-row-${id}`);
+      const cells = row.querySelectorAll("td[data-col]");
+      cells.forEach(cell => {
+        const val = cell.innerText;
+        const col = cell.getAttribute("data-col");
+        cell.innerHTML = `<input type="text" value="${val}" data-col="${col}">`;
+      });
+
+      const actionCell = row.querySelector("td:last-child");
+      actionCell.innerHTML = `
+        <button class="action-btn save-btn" onclick="saveService(${id})">Lưu</button>
+        <button class="action-btn cancel-btn" onclick="openServiceModal('${currentType}', ${currentPlaceId})">Hủy</button>
+      `;
+    }
+
+    async function saveService(id) {
+      const row = document.getElementById(`service-row-${id}`);
+      const inputs = row.querySelectorAll("input");
+      let updatedData = { id };
+
+      inputs.forEach(input => {
+        const col = input.getAttribute("data-col");
+        let val = input.value.trim();
+        if (col === "gia") val = parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+        updatedData[col] = val;
+      });
+
+      try {
+        const res = await fetch(`${window.location.origin}/api/dichvu/${currentType}/${currentPlaceId}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedData)
+        });
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP error! Status: ${res.status}, Message: ${errorText}`);
+        }
+        alert("Cập nhật dịch vụ thành công!");
+        openServiceModal(currentType, currentPlaceId);
+      } catch (err) {
+        console.error("Lỗi khi lưu dịch vụ:", err);
+        alert(`Lỗi khi cập nhật dịch vụ: ${err.message}`);
+      }
+    }
+
+    async function deleteService(id) {
+      if (!confirm("Bạn có chắc muốn xóa dịch vụ này?")) return;
+
+      try {
+        const res = await fetch(`${window.location.origin}/api/dichvu/${currentType}/${currentPlaceId}/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`HTTP error! Status: ${res.status}, Message: ${errorText}`);
+        }
+        alert("Xóa thành công!");
+        openServiceModal(currentType, currentPlaceId);
+      } catch (err) {
+        console.error("Lỗi khi xóa dịch vụ:", err);
+        alert(`Lỗi khi xóa dịch vụ: ${err.message}`);
+      }
+    }
+
+    function addServiceRow() {
+      const content = document.getElementById('service-content');
+      const table = content.querySelector('.service-table');
+      if (!table) return;
+
+      newServiceRowId--;
+      const rowId = `new-service-${newServiceRowId}`;
+
+      let html = `
+        <tr id="${rowId}">
+          <td data-col="tendichvu"><input type="text" data-col="tendichvu" placeholder="Nhập tên dịch vụ"></td>
+          <td data-col="gia"><input type="text" data-col="gia" placeholder="Nhập giá"></td>
+          <td>
+            <button class="action-btn save-btn" onclick="saveNewService('${rowId}')">Lưu</button>
+            <button class="action-btn cancel-btn" onclick="cancelNewService('${rowId}')">Hủy</button>
+          </td>
+        </tr>`;
+      
+      table.insertAdjacentHTML('beforeend', html);
+    }
+
+    async function saveNewService(rowId) {
+      const row = document.getElementById(rowId);
+      const inputs = row.querySelectorAll("input");
+      let newData = {};
+
+      inputs.forEach(input => {
+        const col = input.getAttribute("data-col");
+        let val = input.value.trim();
+        if (col === "gia") val = parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+        newData[col] = val;
+      });
+
+      if (!newData.tendichvu || !newData.gia) {
+        alert("Vui lòng nhập đầy đủ tên dịch vụ và giá!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${window.location.origin}/api/dichvu/${currentType}/${currentPlaceId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newData)
+        });
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || "Lỗi không xác định");
+        }
+        alert("Thêm dịch vụ thành công!");
+        openServiceModal(currentType, currentPlaceId);
+      } catch (err) {
+        console.error("Lỗi khi thêm dịch vụ:", err);
+        alert(`Lỗi khi thêm dịch vụ: ${err.message}`);
+      }
+    }
+
+    function cancelNewService(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) row.remove();
+    }
+  </script>  
 </body>
 </html>

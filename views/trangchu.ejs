@@ -2,213 +2,971 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>myCARe - Trang chủ</title>
+  <title>myCARe - Bản đồ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-    header { background: #95ce97; padding: 50px 80px; font-size: 24px; font-weight: bold; color: black; }
-    nav { display: flex; justify-content: space-between; align-items: center; background: #2f6741; padding: 20px 30px; }
-    .menu-left { display: flex; gap: 15px; }
-    .menu-left button { padding: 8px 15px; border: none; border-radius: 5px; background: #fff; cursor: pointer; font-weight: bold; }
-    .search-box { display: flex; flex-direction: column; position: relative; }
-    .search-box input { padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
-    .search-box button { margin-top: 5px; padding: 6px 12px; border: none; border-radius: 5px; background: #333; color: white; cursor: pointer; width: 100px; }
+    /* Basic layout */
+    html, body { height: 100%; margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; }
+    body { overflow: hidden; }
 
-    #container { display: flex; width: 100%; height: 500px; position: relative; }
-    #map { flex: 1; }
-    #sidebar {
-      width: 300px;
-      background: #f5f5f5;
-      border-left: 1px solid #ccc;
-      overflow-y: auto;
-      padding: 20px;
-      display: none;
-      box-sizing: border-box;
-    }
-    #sidebar img { max-width: 100%; margin-top: 10px; border-radius: 5px; }
-    #sidebar h2 { margin-top: 0; }
-    #sidebar button { margin-top: 10px; padding: 6px 12px; border: none; border-radius: 5px; background: #2f6741; color: #fff; cursor: pointer; }
-
-    #suggestions {
-      position: absolute;
-      top: 65px; 
+    /* Left panel / sidebar */
+    .left-panel {
+      position: fixed;
+      top: 0;
       left: 0;
-      width: 200px;
-      max-height: 150px;
-      overflow-y: auto;
+      width: 320px;
+      height: 100vh;
       background: #fff;
-      border: 1px solid #ccc;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: none;
-      z-index: 1000;
+      z-index: 1002;
+      border-right: 1px solid #e6e9ee;
+      padding: 24px;
+      box-shadow: 2px 0 8px rgba(15,23,42,0.04);
+      overflow-y: auto;
+      transition: width 0.32s cubic-bezier(.2,.8,.2,1), padding 0.32s ease;
     }
-    #suggestions li { padding: 5px 10px; cursor: pointer; }
-    #suggestions li:hover { background: #eee; }
+    .left-panel .logo {
+      font-family: 'Modak', cursive;
+      font-size: 36px;
+      background: linear-gradient(90deg, #1a73e8, #03f007);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+    }
+
+    /* When collapsed */
+    .left-panel.collapsed {
+      width: 52px;
+      padding-left: 8px;
+      padding-right: 8px;
+      overflow: visible;
+    }
+    .left-panel.collapsed .logo,
+    .left-panel.collapsed .search-container,
+    .left-panel.collapsed h6,
+    .left-panel.collapsed .category-list,
+    .left-panel.collapsed .user-card {
+      display: none;
+    }
+
+    /* Search */
+    .left-panel .search-container { margin-bottom: 18px; position: relative; }
+    .left-panel #search-input {
+      width: 100%; border: 1px solid #e6e9ee; padding: 10px 12px; border-radius: 8px;
+      font-size: 15px; transition: border-color 0.2s;
+    }
+    .left-panel #search-input:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+    }
+    #search-results {
+      position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+      border: 1px solid #e6e9ee; border-radius: 8px; margin-top: 4px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      max-height: 250px; overflow-y: auto; display: none;
+      z-index: 1003;
+    }
+    #search-results div {
+      padding: 10px 14px; cursor: pointer; transition: all 0.2s;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 14px; color: #374151;
+    }
+    #search-results div:hover { background: #f3f4f6; }
+    #search-results .show-more { text-align: center; padding: 8px; background: #f8fafc; color: #1a73e8; font-weight: 500; cursor: pointer; }
+
+    .left-panel h6 { margin-top: 8px; margin-bottom: 12px; color: #333; font-weight: 600; }
+    .category-list { display: flex; flex-direction: column; gap: 10px; }
+    .category-item { display: flex; align-items: center; justify-content: space-between; background: #fafbfc; padding: 12px 14px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+    .category-item:hover { background: #f0f4f8; transform: translateY(-1px); border-color: #e6eefc; }
+    .category-item .left { display:flex; align-items:center; gap:10px; color:#2b3a67; }
+    .category-item .icon { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px; background:#e9f2ff; color:#1a73e8; }
+    .category-item .badge { background:#fff; border:1px solid #e6e9ee; padding:4px 8px; border-radius:12px; color:#1a73e8; font-weight:600; }
+
+    .user-card { position: absolute; bottom: 24px; left: 24px; right: 24px; background: linear-gradient(180deg,#ffffff,#fbfdff); border-radius: 12px; padding: 14px; box-shadow: 0 6px 18px rgba(17,24,39,0.06); }
+    .user-card .name { font-weight:700; color:#153e75; }
+    .user-card .role { font-size:13px; color:#6b7280; margin-bottom:8px; }
+
+    /* Map takes full width minus left panel */
+    #map { width: calc(100% - 320px); height: 100vh; margin-left: 320px; transition: margin .28s cubic-bezier(.2,.8,.2,1), width .28s cubic-bezier(.2,.8,.2,1); }
+    .left-panel.collapsed ~ #map { margin-left: 52px; width: calc(100% - 52px); }
+
+    .menu-panel { position: absolute; top: 72px; right: -250px; width: 250px; height: auto; background: #fff; border-left: 1px solid #ddd; padding: 15px; z-index: 1000; transition: right 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+    .menu-panel.active { right: 0; }
+    .menu-panel button { display: block; width: 100%; padding: 10px; margin-bottom: 10px; background: #1a73e8; border: none; color: #fff; font-size: 16px; cursor: pointer; border-radius: 6px; }
+    .menu-panel button:hover { background: #1557b0; }
+    .sidebar { display: none; }
+
+    /* Info panel slides from right */
+    .info-panel { position: fixed; top: 0; right: -320px; width: 320px; height: 100vh; background: #fff; border-left: 1px solid #ddd; padding: 24px; z-index: 1000; overflow-y: auto; box-shadow: -2px 0 8px rgba(0,0,0,0.1); transition: right 0.3s ease-in-out; max-height: 100vh; }
+    .info-panel.active { right: 0; }
+    #info-content { padding-bottom: 60px; }
+    #info-content h5 { font-size: 18px; margin: 15px 0; color: #333; word-break: break-word; }
+    #info-content p { font-size: 15px; color: #666; margin: 10px 0; word-break: break-word; }
+    #info-content img { max-width: 100%; border-radius: 4px; }
+    .info-panel .close-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: #e74c3c; transition: color 0.3s; }
+    .info-panel .close-btn:hover { color: #c0392b; }
+
+    .status-bar { position: absolute; bottom: 0; left: 320px; width: calc(100% - 320px); background: rgba(0, 0, 0, 0.8); color: #fff; padding: 8px 15px; font-size: 14px; z-index: 950; }
+    .left-panel.collapsed ~ .status-bar { left: 52px; width: calc(100% - 52px); }
+
+    .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 1002; width: 500px; max-height: 80vh; overflow-y: auto; background: linear-gradient(135deg, #f0f4f8, #ffffff); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0; }
+    .modal-header h5 { margin: 0; font-size: 22px; color: #1a73e8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #e74c3c; transition: color 0.3s; }
+    .close-btn:hover { color: #c0392b; }
+
+    .service-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; background: #fff; border-radius: 8px; overflow: hidden; }
+    .service-table th, .service-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+    .service-table th { background-color: #1a73e8; color: #fff; font-weight: 600; text-transform: uppercase; }
+    .service-table tr:last-child td { border-bottom: none; }
+    .service-table tr:hover { background-color: #f0f2f5; }
+    .no-services { text-align: center; color: #666; padding: 20px; font-style: italic; }
+    .error-message { text-align: center; color: #e74c3c; padding: 20px; font-weight: 500; }
+
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; }
+
+    .user-location {
+      position: absolute; bottom: 10px; right: 10px; background: rgba(255, 255, 255, 0.9); padding: 5px 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 1000; display: none; font-size: 12px;
+    }
+    .user-location.active { display: block; }
+    .user-location button { padding: 2px 8px; font-size: 12px; margin-left: 5px; }
+
+    #login-notification {
+      position: absolute; bottom: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: white; padding: 10px; border-radius: 4px;
+      z-index: 1000; display: none; font-size: 14px;
+    }
+    #debug-info { position: absolute; top: 90px; left: 10px; background: rgba(0, 0, 0, 0.7); color: white; padding: 5px; z-index: 900; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    .leaflet-routing-container { font-size: 14px; background: rgba(255, 255, 255, 0.8); border-radius: 4px; padding: 5px; }
+    .leaflet-routing-alt, .leaflet-routing-geocoders { display: none; }
+    .leaflet-routing-line-segment { stroke: #2ecc71; stroke-width: 4; }
+
+    /* Custom marker icons */
+    .custom-div-icon { background: none; border: none; }
+    .custom-div-icon i { display: inline-block; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); transform: translateY(-8px); }
+    @keyframes markerPulse { 0% { transform: scale(1) translateY(-8px); } 50% { transform: scale(1.1) translateY(-8px); } 100% { transform: scale(1) translateY(-8px); } }
+    .custom-div-icon i:hover { animation: markerPulse 1s infinite; }
+
+    /* Toggle button placed outside panel to avoid clipping */
+    .toggle-menu-btn {
+      position: absolute;
+      top: 50%;
+      left: 320px; /* aligns with panel width */
+      transform: translateY(-50%) scale(1);
+      width: 36px;
+      height: 36px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1500;
+      transition: transform 0.25s ease, left 0.32s ease;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .toggle-menu-btn:hover { transform: translateY(-50%) scale(1.22); }
+    .toggle-menu-btn i { font-size: 16px; color: #1b396a; transition: transform 220ms ease; }
+
+    /* When panel collapsed, move toggle to new edge and rotate icon */
+    .left-panel.collapsed ~ .toggle-menu-btn { left: 52px; }
+    .left-panel.collapsed ~ .toggle-menu-btn i { transform: rotate(180deg); }
+
+    /* Nearest places button */
+    #nearest-places-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 14px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      z-index: 999;
+      display: none;
+      transition: background 0.2s ease;
+    }
+    #nearest-places-btn:hover {
+      background: #1557b0;
+    }
+    #nearest-places-btn.active { display: block; }
+
+    /* Nearest places modal */
+    .nearest-places-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      width: 420px;
+      max-height: 70vh;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 1003;
+      overflow-y: auto;
+    }
+    .nearest-places-modal.active { display: block; }
+    .nearest-modal-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid #e6e9ee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nearest-modal-header h5 {
+      margin: 0;
+      color: #333;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .nearest-modal-header .close-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #999;
+    }
+    .nearest-modal-header .close-btn:hover { color: #333; }
+    .nearest-places-content {
+      padding: 15px 20px;
+    }
+    .place-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f8fafc;
+      border: 1px solid #e6e9ee;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .place-item:hover {
+      background: #f0f4f8;
+    }
+    .place-item h6 {
+      margin: 0 0 6px 0;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .place-item .distance-info {
+      display: inline-block;
+      color: #1a73e8;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .place-item p {
+      margin: 4px 0;
+      font-size: 12px;
+      color: #666;
+    }
+    .place-item .place-actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .place-item .place-actions button {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: 1px solid #1a73e8;
+      background: #fff;
+      color: #1a73e8;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .place-item .place-actions button:hover {
+      background: #1a73e8;
+      color: #fff;
+    }
+    .overlay-nearest { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1002; }
+    .overlay-nearest.active { display: block; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      #map { width: 100%; margin-left: 0; }
+      .info-panel { display: none; } /* Hide info-panel on small screens */
+      .status-bar { width: 100%; left: 0; }
+      .toggle-menu-btn { display: none; }
+    }
   </style>
 </head>
 <body>
-  <header>myCARe</header>
-  <nav>
-    <div class="menu-left">
-      <button onclick="loadMarkers('tramsac')">Trạm sạc</button>
-      <button onclick="loadMarkers('ttsc')">Trung tâm sửa chữa</button>
-      <button onclick="loadMarkers('baidoxe')">Bãi đỗ xe</button>
-        <% if(!user){ %>
-          <button onclick="window.location.href='/dangnhap'">Đăng nhập</button>
-        <% } else { %>
-          <% if(user.role === 'quantrivien'){ %>
-            <button onclick="window.location.href='/quanly'">Trang quản lý</button>
-          <% } %>
-          <button onclick="window.location.href='/dangxuat'">Đăng xuất (<%= user.username %>)</button>
-        <% } %>
-
+  <!-- LEFT PANEL -->
+  <div class="left-panel" id="left-panel">
+    <span class="logo">myCARe</span>
+    <div class="search-container">
+      <input id="search-input" type="text" class="form-control" placeholder="Tìm kiếm địa điểm..." autocomplete="off">
+      <div id="search-results"></div>
     </div>
-    <div class="search-box">
-      <div style="display: flex; gap: 5px; align-items: center;">
-        <input id="search-input" type="text" placeholder="Nhập tên địa điểm..." autocomplete="off">
-        <button id="search-btn">Tìm kiếm</button>
+    <h6>Các địa điểm</h6>
+    <div class="category-list">
+      <div class="category-item" onclick="loadMarkers('tramsac')">
+        <div class="left"><span class="icon"><i class="fas fa-charging-station"></i></span><span>Trạm sạc</span></div>
+        <div class="badge"><%= (tramsac || []).length %></div>
       </div>
-      <ul id="suggestions"></ul>
+      <div class="category-item" onclick="loadMarkers('ttsc')">
+        <div class="left"><span class="icon"><i class="fas fa-tools"></i></span><span>Trung tâm sửa chữa</span></div>
+        <div class="badge"><%= (ttsc || []).length %></div>
+      </div>
+      <div class="category-item" onclick="loadMarkers('baidoxe')">
+        <div class="left"><span class="icon"><i class="fas fa-parking"></i></span><span>Bãi đỗ xe</span></div>
+        <div class="badge"><%= (baidoxe || []).length %></div>
+      </div>
+      <div class="category-item" onclick="loadMarkers('ttdk')">
+        <div class="left"><span class="icon"><i class="fas fa-certificate"></i></span><span>Đăng kiểm</span></div>
+        <div class="badge"><%= (ttdk || []).length %></div>
+      </div>
     </div>
-  </nav>
 
-  <div id="container">
-    <div id="map"></div>
-    <div id="sidebar"></div>
+    <div class="user-card">
+      <% if (!user) { %>
+        <div style="text-align:center;">
+          <div style="margin-bottom:8px; color:#1b396a; font-weight:700;">Khách</div>
+          <a class="btn btn-sm btn-outline-primary" href="/dangnhap">Đăng nhập</a>
+        </div>
+      <% } else { %>
+        <div class="name"><%= user.tentaikhoan %></div>
+        <div class="role"><%= user.role === 'quantrivien' ? 'Quản trị viên' : 'Người dùng' %></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <% if (user.role === 'quantrivien') { %>
+            <a class="btn btn-sm btn-primary" href="/quanly">Quản lý</a>
+          <% } %>
+          <a class="btn btn-sm btn-outline-secondary" href="/thongtinnguoidung">Thông tin tài khoản</a>
+          <a class="btn btn-sm btn-danger" href="/dangxuat">Đăng xuất</a>
+        </div>
+      <% } %>
+    </div>
   </div>
 
+  <!-- TOGGLE BUTTON (outside panel so it won't be clipped) -->
+  <div class="toggle-menu-btn" id="toggle-menu" title="Thu/gọn menu" role="button" tabindex="0" aria-label="Thu gọn menu">
+    <i class="bi bi-chevron-left" id="toggle-icon" aria-hidden="true"></i>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- MENU PANEL (existing small panel on right) -->
+  <div class="menu-panel" id="menu-panel">
+    <button onclick="loadMarkers('tramsac')">Trạm sạc</button>
+    <button onclick="loadMarkers('ttsc')">Trung tâm sửa chữa</button>
+    <button onclick="loadMarkers('baidoxe')">Bãi đỗ xe</button>
+    <button onclick="loadMarkers('ttdk')">Đăng kiểm</button>
+    <button onclick="window.location.href='/thongtinnguoidung'">Thông tin tài khoản</button>
+  </div>
+
+  <div class="sidebar" id="sidebar" style="display: none;"></div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel" id="info-panel">
+    <button class="close-btn" onclick="closeInfoPanel()">&times;</button>
+    <div id="info-content"></div>
+  </div>
+
+  <div class="status-bar" id="status-bar"></div>
+
+  <div class="user-location" id="user-location">
+    <span id="user-latlon"></span>
+    <button class="btn btn-sm btn-primary" onclick="centerOnUser()">Vị trí người dùng</button>
+  </div>
+
+  <div id="service-modal" class="modal">
+    <div class="modal-header">
+      <h5 class="service-title" id="service-modal-title">Dịch vụ</h5>
+      <button class="close-btn" onclick="closeServiceModal()">&times;</button>
+    </div>
+    <div id="service-content"></div>
+  </div>
+
+  <div id="review-modal" class="modal">
+    <div class="modal-header">
+      <h5 id="review-modal-title">Đánh giá địa điểm</h5>
+      <button class="close-btn" onclick="closeReviewModal()">&times;</button>
+    </div>
+    <div id="review-modal-body">
+      <% if (user) { %>
+        <form id="review-form" class="mb-4">
+          <input type="hidden" id="placeId" name="placeId">
+          <label for="rating" class="form-label">Số sao:</label>
+          <select id="rating" name="rating" class="form-select mb-2">
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★☆ (4)</option>
+            <option value="3">★★★☆☆ (3)</option>
+            <option value="2">★★☆☆☆ (2)</option>
+            <option value="1">★☆☆☆☆ (1)</option>
+          </select>
+          <textarea id="comment" name="comment" rows="3" class="form-control mb-2" placeholder="Nhập nội dung đánh giá..." required></textarea>
+          <button type="submit" class="btn btn-success">Gửi đánh giá</button>
+        </form>
+      <% } %>
+      <div id="all-reviews"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="service-overlay"></div>
+  <div class="overlay" id="review-overlay"></div>
+  <div id="login-notification"></div>
+  <div id="debug-info"></div>
+
+  <!-- Nearest places button -->
+  <button id="nearest-places-btn" onclick="showNearestPlaces()" title="Xem 3 địa điểm gần nhất">
+    Các địa điểm gần nhất
+  </button>
+
+  <!-- Nearest places modal -->
+  <div class="overlay-nearest" id="overlay-nearest" onclick="closeNearestPlacesModal()"></div>
+  <div class="nearest-places-modal" id="nearest-places-modal">
+    <div class="nearest-modal-header">
+      <h5>Địa điểm gần nhất</h5>
+      <button class="close-btn" onclick="closeNearestPlacesModal()">&times;</button>
+    </div>
+    <div class="nearest-places-content" id="nearest-places-content"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
   <script>
+    // Initialize map
     var map = L.map('map').setView([21.0285, 105.8542], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
 
     var markersLayer = L.layerGroup().addTo(map);
-    var routeControl = null;
-    var sidebar = document.getElementById('sidebar');
+    var userMarker;
+    var routingControl;
 
     var data = {
-      tramsac: <%- JSON.stringify(tramsac) %>,
-      ttsc: <%- JSON.stringify(ttsc) %>,
-      baidoxe: <%- JSON.stringify(baidoxe) %>
+      tramsac: <%- JSON.stringify(tramsac || []) %>,
+      ttsc: <%- JSON.stringify(ttsc || []) %>,
+      baidoxe: <%- JSON.stringify(baidoxe || []) %>,
+      ttdk: <%- JSON.stringify(ttdk || []) %>
     };
 
-    var allPlaces = [...data.tramsac, ...data.ttsc, ...data.baidoxe];
+    data.tramsac = (data.tramsac || []).map(item => ({ ...item, type: 'tramsac' }));
+    data.ttsc = (data.ttsc || []).map(item => ({ ...item, type: 'ttsc' }));
+    data.baidoxe = (data.baidoxe || []).map(item => ({ ...item, type: 'baidoxe' }));
+    data.ttdk = (data.ttdk || []).map(item => ({ ...item, type: 'ttdk' }));
+
+    var allPlaces = [...data.tramsac, ...data.ttsc, ...data.baidoxe, ...data.ttdk];
+
+    // DEBUG: Log coordinate data
+    console.log('=== COORDINATE DEBUG ===');
+    console.log('Sample tramsac:', data.tramsac[0]);
+    console.log('Sample ttsc:', data.ttsc[0]);
+    console.log('Sample baidoxe:', data.baidoxe[0]);
+    console.log('Sample ttdk:', data.ttdk[0]);
+    if (data.tramsac[0]) {
+      console.log('First tramsac coordinates - lat type:', typeof data.tramsac[0].lat, 'lon type:', typeof data.tramsac[0].lon);
+      console.log('First tramsac coordinates - lat:', data.tramsac[0].lat, 'lon:', data.tramsac[0].lon);
+      console.log('Will display at: [' + data.tramsac[0].lat + ', ' + data.tramsac[0].lon + ']');
+    }
+
+    function toggleMenuPanel() {
+      document.getElementById('menu-panel').classList.toggle('active');
+    }
+
+    // Custom icons
+    const markerIcons = {
+      tramsac: L.divIcon({ html: '<i class="fas fa-charging-station" style="color: #1a73e8; font-size: 24px;"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30] }),
+      ttsc: L.divIcon({ html: '<i class="fas fa-tools" style="color: #e67e22; font-size: 24px;"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30] }),
+      baidoxe: L.divIcon({ html: '<i class="fas fa-parking" style="color: #27ae60; font-size: 24px;"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30] }),
+      ttdk: L.divIcon({ html: '<i class="fas fa-certificate" style="color: #10b981; font-size: 24px;"></i>', className: 'custom-div-icon', iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30] })
+    };
+
+    // Coordinate validation and conversion
+    function validateCoordinates(lat, lon) {
+      // Convert to number if string
+      lat = parseFloat(lat);
+      lon = parseFloat(lon);
+      
+      // Check if valid latitude/longitude
+      if (isNaN(lat) || isNaN(lon)) {
+        console.warn('Invalid coordinates:', lat, lon);
+        return null;
+      }
+      
+      // Check if coordinates are within valid range
+      // If they look swapped (lon < -90 or lat > 90), they might be reversed
+      if (lat > 90 || lat < -90 || lon > 180 || lon < -180) {
+        console.warn('Coordinates out of range, attempting swap:', lat, lon);
+        // Try swapping
+        if (lon >= -90 && lon <= 90 && lat >= -180 && lat <= 180) {
+          console.log('Swapped coordinates to:', lon, lat);
+          return [lon, lat]; // Swap them
+        }
+        return null;
+      }
+      
+      return [lat, lon];
+    }
 
     function loadMarkers(type) {
       markersLayer.clearLayers();
-      if(routeControl) { map.removeControl(routeControl); routeControl = null; }
-      sidebar.style.display = 'none';
+      var featureGroup = L.featureGroup().addTo(map);
+      var items = data[type] || [];
+      
+      // Store currently displayed places
+      currentlyDisplayedPlaces = items;
 
-      data[type].forEach(item => {
+      items.forEach(item => {
+        // Validate and correct coordinates if needed
+        var coords = validateCoordinates(item.lat, item.lon);
+        if (!coords) {
+          console.error('Skipping marker with invalid coordinates:', item.name, item.lat, item.lon);
+          return;
+        }
+        var lat = coords[0];
+        var lon = coords[1];
+        
         var popupContent = `
           <b>${item.name || "Chưa cập nhật"}</b><br/>
-          <button onclick="showInfo(${JSON.stringify(item).replace(/"/g,'&quot;')})">Thông tin</button>
-          <button onclick="showRoute(${item.lat}, ${item.lng})">Dẫn đường</button>
+          <button class="btn btn-sm btn-primary mt-1" onclick="showInfo(${JSON.stringify(item).replace(/"/g, '&quot;')})">Thông tin</button>
+          <% if (user) { %>
+            <button class="btn btn-sm btn-secondary mt-1 ms-1" onclick="showRoute(${lat}, ${lon}, '${item.name || 'Địa điểm'}')">Dẫn đường</button>
+          <% } else { %>
+            <button class="btn btn-sm btn-secondary mt-1 ms-1" onclick="showLoginNotification()">Dẫn đường</button>
+          <% } %>
+          <button class="btn btn-sm btn-info mt-1 ms-1" onclick="navigateToPlace(${lat}, ${lon}, '${item.name || 'Địa điểm'}')">Google Map</button>
         `;
-        L.marker([item.lat, item.lng])
-          .bindPopup(popupContent)
-          .addTo(markersLayer);
+        var marker = L.marker([lat, lon], { icon: markerIcons[type] }).bindPopup(popupContent).addTo(featureGroup);
+        markersLayer.addLayer(marker);
       });
+
+      if (featureGroup.getLayers().length > 0) {
+        map.fitBounds(featureGroup.getBounds(), { padding: [50, 50], maxZoom: 15 });
+      } else {
+        map.setView([21.0285, 105.8542], 13);
+      }
+
+      // Show nearest places button if user is logged in and has location
+      <% if (user) { %>
+        const nearestBtn = document.getElementById('nearest-places-btn');
+        if (currentUserLocation) {
+          nearestBtn.classList.add('active');
+        }
+      <% } %>
     }
 
     function showInfo(item) {
-      sidebar.style.display = 'block';
-      sidebar.innerHTML = `
-        <h2>${item.name || "Chưa cập nhật"}</h2>
-        <p><b>Địa chỉ:</b> ${item.diachi || "Chưa cập nhật"}</p>
-        <p><b>Liên hệ:</b> ${item.lienhe || "Chưa cập nhật"}</p>
-        <p><b>Giờ mở cửa:</b> ${item.giomocua || "Chưa cập nhật"} - ${item.giodongcua || "Chưa cập nhật"}</p>
-        ${item.hinhtram ? `<img src="${item.hinhtram}" />` : ''}
-        <button onclick="sidebar.style.display='none'">Đóng</button>
-      `;
-    }
-
-    function showRoute(lat, lng) {
-      if (!navigator.geolocation) { alert('Trình duyệt không hỗ trợ định vị'); return; }
-
-      navigator.geolocation.getCurrentPosition(function(position) {
-        var userLat = position.coords.latitude;
-        var userLng = position.coords.longitude;
-
-        if(routeControl) { map.removeControl(routeControl); }
-
-        routeControl = L.Routing.control({
-          waypoints: [
-            L.latLng(userLat, userLng),
-            L.latLng(lat, lng)
-          ],
-          routeWhileDragging: true,
-          show: true,
-          collapsible: true
-        }).addTo(map);
-      }, function(error){
-        alert('Không thể lấy vị trí hiện tại: ' + error.message);
-      }, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      });
-    }
-
-    
-    var input = document.getElementById('search-input');
-    var searchButton = document.getElementById('search-btn');
-    var suggestions = document.getElementById('suggestions');
-
-    input.addEventListener('input', function() {
-      var query = this.value.trim().toLowerCase();
-      suggestions.innerHTML = '';
-      if(query === '') { suggestions.style.display = 'none'; return; }
-
-      var matches = allPlaces.filter(p => p.name && p.name.toLowerCase().includes(query));
-      matches.forEach(p => {
-        var li = document.createElement('li');
-        li.textContent = p.name;
-        li.addEventListener('click', function() {
-          selectPlace(p);
-          suggestions.style.display = 'none';
-          input.value = p.name;
-        });
-        suggestions.appendChild(li);
-      });
-      suggestions.style.display = matches.length > 0 ? 'block' : 'none';
-    });
-
-    searchButton.addEventListener('click', function() {
-      var query = input.value.trim().toLowerCase();
-      if(!query) return;
-      var match = allPlaces.find(p => p.name && p.name.toLowerCase().includes(query));
-      if(match) selectPlace(match);
-      else alert('Không tìm thấy địa điểm');
-    });
-
-    function selectPlace(place) {
-      let found = false;
-      markersLayer.eachLayer(function(marker){
-        var mLatLng = marker.getLatLng();
-        if(mLatLng.lat === place.lat && mLatLng.lng === place.lng){
-          found = true;
-          marker.openPopup();
-        }
-      });
-
-      if(!found){
-        var popupContent = `
-          <b>${place.name || "Chưa cập nhật"}</b><br/>
-          <button onclick="showInfo(${JSON.stringify(place).replace(/"/g,'&quot;')})">Thông tin</button>
-          <button onclick="showRoute(${place.lat}, ${place.lng})">Dẫn đường</button>
-        `;
-        L.marker([place.lat, place.lng]).bindPopup(popupContent).addTo(markersLayer).openPopup();
+      const infoPanel = document.getElementById('info-panel');
+      const infoContent = document.getElementById('info-content');
+      if (!infoPanel || !infoContent) {
+        console.error('Phần tử DOM không tìm thấy:', infoPanel, infoContent);
+        return;
       }
 
-      map.setView([place.lat, place.lng], 17);
-      showInfo(place);
+      let imageHtml = '';
+      const imageFields = { tramsac: 'hinhtram', ttsc: 'hinhtram', baidoxe: 'hinhtram' };
+      const imageField = imageFields[item.type];
+      const imageUrl = item[imageField] || '';
+
+      if (imageUrl) {
+        imageHtml = `<p><strong>Hình ảnh:</strong> <img src="${imageUrl}" alt="Hình ảnh địa điểm" style="max-width: 100%; height: auto;"></p>`;
+      } else {
+        imageHtml = '<p><strong>Hình ảnh:</strong> Không có hình ảnh.</p>';
+      }
+
+      const type = item.type;
+      const placeId = type ? `${type}_${item.gid}` : '';
+      infoContent.innerHTML = `
+        <h5>${item.name || "Chưa cập nhật"}</h5>
+        ${item.diachi ? `<p><strong>Địa chỉ:</strong> ${item.diachi}</p>` : ''}
+        ${item.lienhe ? `<p><strong>Liên hệ:</strong> ${item.lienhe}</p>` : ''}
+        ${item.giomocua ? `<p><strong>Giờ mở cửa:</strong> ${item.giomocua}</p>` : ''}
+        ${item.giodongcua || item.giodongtt ? `<p><strong>Giờ đóng cửa:</strong> ${item.giodongcua || item.giodongtt}</p>` : ''}
+        ${imageHtml}
+        <div class="mt-3">
+          <button class="btn btn-info" onclick="showServiceModal('${type}', ${item.gid}, '${item.name || 'Chưa cập nhật'}')">Dịch vụ</button>
+          <button class="btn btn-success" onclick="showReviewModal('${item.name || 'Chưa cập nhật'}', '${placeId}')">Đánh giá</button>
+        </div>
+      `;
+      infoPanel.classList.add('active');
     }
 
+    function closeInfoPanel() {
+      const infoPanel = document.getElementById('info-panel');
+      if (infoPanel) infoPanel.classList.remove('active');
+    }
+
+    // Distance filter functions
+    let userLocation = null;
+    let currentDistanceRadius = null;
+    let filteredPlacesByDistance = [];
+
+    // Calculate Haversine distance between two coordinates
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Radius of Earth in kilometers
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // Variables for user location and nearest places
+    let currentUserLocation = null;
+    let currentlyDisplayedPlaces = [];
+
+    // Show nearest places modal
+    function showNearestPlaces() {
+      if (!currentUserLocation || currentlyDisplayedPlaces.length === 0) {
+        alert('Vui lòng chọn một loại địa điểm trước');
+        return;
+      }
+
+      // Calculate distances for all displayed places
+      const placesWithDistance = currentlyDisplayedPlaces.map(place => {
+        const coords = validateCoordinates(place.lat, place.lon);
+        if (!coords) return null;
+        
+        const distance = calculateDistance(currentUserLocation.lat, currentUserLocation.lon, coords[0], coords[1]);
+        return { ...place, distance: distance };
+      }).filter(p => p !== null)
+       .sort((a, b) => a.distance - b.distance)
+       .slice(0, 3); // Get top 3 nearest places
+
+      // Display in modal
+      displayNearestPlacesModal(placesWithDistance);
+    }
+
+    // Display nearest places in modal
+    function displayNearestPlacesModal(places) {
+      const modal = document.getElementById('nearest-places-modal');
+      const content = document.getElementById('nearest-places-content');
+      const overlay = document.getElementById('overlay-nearest');
+
+      let html = '';
+      places.forEach((place, index) => {
+        html += `
+          <div class="place-item">
+            <h6>#${index + 1} - ${place.name || 'Chưa cập nhật'}</h6>
+            <div class="distance-info">${place.distance.toFixed(2)} km</div>
+            <p><strong>Địa chỉ:</strong> ${place.diachi || 'Chưa cập nhật'}</p>
+            <p><strong>Liên hệ:</strong> ${place.lienhe || 'Chưa cập nhật'}</p>
+            <div class="place-actions">
+              <button onclick="showInfo(${JSON.stringify(place).replace(/"/g, '&quot;')}); closeNearestPlacesModal();">Chi tiết</button>
+              <button onclick="showRoute(${place.lat}, ${place.lon}, '${place.name || 'Địa điểm'}');">Dẫn đường</button>
+            </div>
+          </div>
+        `;
+      });
+
+      content.innerHTML = html;
+      modal.classList.add('active');
+      overlay.classList.add('active');
+    }
+
+    // Close nearest places modal
+    function closeNearestPlacesModal() {
+      const modal = document.getElementById('nearest-places-modal');
+      const overlay = document.getElementById('overlay-nearest');
+      modal.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+
+    function navigateToPlace(lat, lon, name) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${lat},${lon}&travelmode=driving`;
+            window.open(url, '_blank');
+            document.getElementById('status-bar').textContent = `Đang dẫn đường đến ${name}`;
+          },
+          function(error) {
+            console.error('Lỗi khi lấy vị trí:', error);
+            const notification = document.getElementById('login-notification');
+            notification.textContent = 'Lỗi: Không lấy được vị trí của bạn. Vui lòng kiểm tra cài đặt vị trí.';
+            notification.style.display = 'block';
+            setTimeout(() => { notification.style.display = 'none'; }, 5000);
+          }
+        );
+      } else {
+        const notification = document.getElementById('login-notification');
+        notification.textContent = 'Lỗi: Trình duyệt không hỗ trợ định vị.';
+        notification.style.display = 'block';
+        setTimeout(() => { notification.style.display = 'none'; }, 5000);
+      }
+    }
+
+    function showRoute(lat, lon, name) {
+      const statusBar = document.getElementById('status-bar');
+      if (!navigator.geolocation) { statusBar.textContent = 'Lỗi: Trình duyệt không hỗ trợ định vị.'; return; }
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const userLat = position.coords.latitude;
+          const userLon = position.coords.longitude;
+
+          if (routingControl) map.removeControl(routingControl);
+
+          routingControl = L.Routing.control({
+            waypoints: [ L.latLng(userLat, userLon), L.latLng(lat, lon) ],
+            lineOptions: { styles: [{ color: '#2ecc71', weight: 4 }] },
+            routeWhileDragging: false, addWaypoints: false, createMarker: () => null
+          }).addTo(map);
+
+          routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            const distance = (summary.totalDistance / 1000).toFixed(2);
+            const duration = Math.round(summary.totalTime / 60);
+            statusBar.textContent = `Khoảng cách: ${distance} km | Thời gian: ${duration} phút đến ${name}`;
+            map.fitBounds(e.routes[0].coordinates);
+          });
+
+          routingControl.on('routingerror', function(e) {
+            console.error('Lỗi khi tính tuyến đường:', e.error);
+            statusBar.textContent = `Lỗi: Không thể tính tuyến đường đến ${name}. Vui lòng thử lại.`;
+            setTimeout(() => {
+              if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = L.Routing.control({
+                  waypoints: [ L.latLng(userLat, userLon), L.latLng(lat, lon) ],
+                  lineOptions: { styles: [{ color: '#2ecc71', weight: 4 }] },
+                  routeWhileDragging: false, addWaypoints: false, createMarker: () => null
+                }).addTo(map);
+              }
+            }, 2000);
+          });
+        },
+        function(error) {
+          console.error('Lỗi khi lấy vị trí:', error);
+          statusBar.textContent = 'Lỗi: Không lấy được vị trí của bạn. Vui lòng kiểm tra cài đặt vị trí.';
+        }
+      );
+    }
+
+    function showServiceModal(type, gid, name) {
+      const modal = document.getElementById('service-modal');
+      const title = document.getElementById('service-modal-title');
+      const content = document.getElementById('service-content');
+      const overlay = document.getElementById('service-overlay');
+
+      title.textContent = `Dịch vụ - ${name}`;
+      overlay.style.display = 'block';
+      modal.style.display = 'block';
+
+      fetch(`/api/dichvu/${type}/${gid}`)
+        .then(res => { if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`); return res.json(); })
+        .then(services => {
+          if (!Array.isArray(services) || services.length === 0) {
+            content.innerHTML = '<div class="no-services">Hiện chưa có dịch vụ nào</div>';
+          } else {
+            let html = '<table class="service-table"><tr><th>Tên dịch vụ</th><th>Giá (VNĐ)</th></tr>';
+            services.forEach(service => { html += `<tr><td>${service.tendichvu || ''}</td><td>${service.gia ? service.gia.toLocaleString('vi-VN') : ''}</td></tr>`; });
+            html += '</table>'; content.innerHTML = html;
+          }
+        })
+        .catch(err => { console.error('Lỗi khi tải dịch vụ:', err); content.innerHTML = '<div class="error-message">Lỗi khi tải dịch vụ: ' + err.message + '</div>'; });
+    }
+
+    function closeServiceModal() { document.getElementById('service-overlay').style.display = 'none'; document.getElementById('service-modal').style.display = 'none'; }
+
+    function showReviewModal(placeName, placeId) {
+      const modal = document.getElementById('review-modal');
+      const title = document.getElementById('review-modal-title');
+      const allReviews = document.getElementById('all-reviews');
+      const reviewForm = document.getElementById('review-form');
+      const overlay = document.getElementById('review-overlay');
+
+      title.textContent = `Đánh giá - ${placeName}`;
+      document.getElementById('placeId').value = placeId;
+      overlay.style.display = 'block'; modal.style.display = 'block';
+
+      fetch(`/danhgia/${placeId.split('_')[0]}/${placeId.split('_')[1]}`)
+        .then(res => { if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`); return res.json(); })
+        .then(reviews => {
+          if (!Array.isArray(reviews) || reviews.length === 0) {
+            allReviews.innerHTML = '<div class="no-services">Chưa có đánh giá nào</div>';
+          } else {
+            let html = '';
+            reviews.forEach(review => {
+              html += `<div class="review-item"><p><strong>${review.tentaikhoan}</strong> - ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</p><p>${review.binhluan || ''}</p><small>${new Date(review.ngaytao).toLocaleString('vi-VN')}</small></div>`;
+            });
+            allReviews.innerHTML = html;
+          }
+        })
+        .catch(err => { console.error('Lỗi khi tải đánh giá:', err); allReviews.innerHTML = '<div class="error-message">Lỗi khi tải đánh giá: ' + err.message + '</div>'; });
+
+      if (reviewForm) {
+        reviewForm.removeEventListener && reviewForm.removeEventListener('submit', ()=>{}); // ensure no duplicate
+        reviewForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const rating = document.getElementById('rating').value;
+          const comment = document.getElementById('comment').value;
+
+          fetch('/danhgia', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ placeId, rating, comment }) })
+            .then(res => { if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`); return res.json(); })
+            .then(data => { document.getElementById('comment').value = ''; showReviewModal(placeName, placeId); })
+            .catch(err => { console.error('Lỗi khi gửi đánh giá:', err); alert('Lỗi khi gửi đánh giá: ' + err.message); });
+        });
+      }
+    }
+
+    function closeReviewModal() { document.getElementById('review-overlay').style.display = 'none'; document.getElementById('review-modal').style.display = 'none'; }
+
+    // Search logic
+    let allFilteredPlaces = [];
+    let currentlyShowing = 3;
+    const resultsPerPage = 3;
+    document.getElementById('search-input').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const searchResults = document.getElementById('search-results');
+      if (searchTerm) {
+        allFilteredPlaces = allPlaces.filter(place => place.name && place.name.toLowerCase().includes(searchTerm));
+        currentlyShowing = resultsPerPage;
+        updateSearchResults();
+      } else {
+        searchResults.style.display = 'none';
+        searchResults.innerHTML = '';
+        allFilteredPlaces = [];
+        currentlyShowing = resultsPerPage;
+      }
+    });
+
+    function updateSearchResults() {
+      const searchResults = document.getElementById('search-results');
+      if (allFilteredPlaces.length > 0) {
+        const displayedPlaces = allFilteredPlaces.slice(0, currentlyShowing);
+        let html = displayedPlaces.map(item => `<div onclick="selectPlace(${JSON.stringify(item).replace(/"/g, '&quot;')})">${item.name || 'Chưa cập nhật'}</div>`).join('');
+        if (currentlyShowing < allFilteredPlaces.length) {
+          html += `<div class="show-more" onclick="showMoreResults()">Xem thêm (${allFilteredPlaces.length - currentlyShowing} kết quả)</div>`;
+        }
+        searchResults.innerHTML = html; searchResults.style.display = 'block';
+      } else {
+        searchResults.innerHTML = '<div>Không tìm thấy địa điểm</div>'; searchResults.style.display = 'block';
+      }
+    }
+    function showMoreResults() { currentlyShowing += resultsPerPage; updateSearchResults(); }
+    function selectPlace(item) { showInfo(item); document.getElementById('search-input').value = item.name || ''; document.getElementById('search-results').style.display = 'none'; }
+    document.addEventListener('click', function(event) {
+      const searchBox = document.querySelector('.search-container');
+      const searchInput = document.getElementById('search-input');
+      const searchResults = document.getElementById('search-results');
+      if (!searchBox.contains(event.target) && event.target !== searchInput) { searchResults.style.display = 'none'; }
+    });
+
+    // User location (if logged)
+    <% if (user) { %>
+      function getUserLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            let lat = position.coords.latitude;
+            let lon = position.coords.longitude;
+            
+            console.log('Raw geolocation - lat:', lat, 'lon:', lon);
+            
+            // Validate user coordinates (from browser's geolocation)
+            var userCoords = validateCoordinates(lat, lon);
+            if (!userCoords) {
+              console.error('Invalid user coordinates from browser');
+              const userLocation = document.getElementById('user-location');
+              userLocation.innerHTML = '<span>Lỗi: Vị trí không hợp lệ</span>';
+              userLocation.classList.add('active');
+              return;
+            }
+            lat = userCoords[0];
+            lon = userCoords[1];
+            
+            // Store user location for nearest places feature
+            currentUserLocation = { lat: lat, lon: lon };
+            
+            const userLatLon = document.getElementById('user-latlon');
+            const userLocation = document.getElementById('user-location');
+            userLatLon.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            userLocation.classList.add('active');
+
+            if (userMarker) map.removeLayer(userMarker);
+            const redIcon = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [0, -41] });
+            userMarker = L.marker([lat, lon], { icon: redIcon }).addTo(map).bindPopup('Vị trí của bạn', { autoClose: false, closeOnClick: false }).openPopup();
+            map.setView([lat, lon], 13);
+
+            // Show nearest places button if a location type has been selected
+            const nearestBtn = document.getElementById('nearest-places-btn');
+            if (currentlyDisplayedPlaces.length > 0) {
+              nearestBtn.classList.add('active');
+            }
+          }, function(error) {
+            console.error('Lỗi khi lấy vị trí:', error);
+            const userLocation = document.getElementById('user-location');
+            userLocation.innerHTML = '<span>Lỗi: ' + error.message + '</span>';
+            userLocation.classList.add('active');
+          });
+        } else {
+          const userLocation = document.getElementById('user-location');
+          userLocation.innerHTML = '<span>Lỗi: Trình duyệt không hỗ trợ</span>';
+          userLocation.classList.add('active');
+        }
+      }
+      function centerOnUser() { if (userMarker) map.setView(userMarker.getLatLng(), 13); else getUserLocation(); }
+      window.onload = getUserLocation;
+    <% } %>
+
+    function showLoginNotification() {
+      const notification = document.getElementById('login-notification');
+      notification.textContent = 'Vui lòng đăng nhập để sử dụng chức năng dẫn đường!';
+      notification.style.display = 'block';
+      setTimeout(() => { notification.style.display = 'none'; }, 5000);
+    }
+
+    // TOGGLE SIDEBAR: button is outside panel to avoid clipping
+    (function() {
+      const toggleBtn = document.getElementById('toggle-menu');
+      const leftPanel = document.getElementById('left-panel');
+      const toggleIcon = document.getElementById('toggle-icon');
+
+      if (toggleBtn && leftPanel) {
+        toggleBtn.addEventListener('click', function() {
+          leftPanel.classList.toggle('collapsed');
+
+          // Change icon direction
+          if (leftPanel.classList.contains('collapsed')) {
+            toggleIcon.classList.remove('bi-chevron-left');
+            toggleIcon.classList.add('bi-chevron-right');
+          } else {
+            toggleIcon.classList.remove('bi-chevron-right');
+            toggleIcon.classList.add('bi-chevron-left');
+          }
+
+          // Ensure Leaflet updates map size after transition
+          // Use requestAnimationFrame and a timeout to be robust
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              try { map.invalidateSize(); } catch (e) { console.warn('map.invalidateSize lỗi:', e); }
+            });
+          });
+          setTimeout(function() { try { map.invalidateSize(); } catch (e) {} }, 360);
+        });
+
+        // keyboard accessibility
+        toggleBtn.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBtn.click(); }
+        });
+      }
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>myCARe - Thống kê chi phí</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; overflow: auto; }
+    .left-panel { position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #fff; z-index: 1002; border-right: 1px solid #e6e9ee; padding: 24px; box-shadow: 2px 0 8px rgba(15,23,42,0.04); overflow-y: auto; }
+    .left-panel .logo { font-family: 'Modak', cursive; font-size: 36px; background: linear-gradient(90deg, #1a73e8, #03f007); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 3px; }
+    .left-panel .desc { color: #6b7280; font-size: 15px; line-height: 1.5; margin: 16px 0; }
+    .main-content { position: absolute; top: 0; left: 320px; width: calc(100% - 320px); height: 100vh; padding: 24px; display: flex; flex-direction: column; overflow-y: auto; }
+    .top-bar { display: flex; justify-content: flex-end; padding: 8px 0; margin-bottom: 20px; }
+    .nav-btn { background: #1a73e8; border: none; padding: 10px 20px; margin: 0 8px; color: #fff; font-size: 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+    .nav-btn:hover { background: #1557b0; transform: translateY(-1px); color: #fff; }
+    .content-area { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+    .card { width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(17,24,39,0.05); overflow: hidden; }
+    .card-header { background: #1a73e8; color: #fff; padding: 20px; font-size: 20px; font-weight: 600; }
+    .card-body { padding: 20px; }
+    .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .chart-container { position: relative; height: 350px; margin: 20px 0; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+    .stat-card { background: #fbfdff; border: 1px solid #eef2ff; border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-label { color: #6b7280; font-size: 13px; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .expense-table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    .expense-table th { background: #fbfdff; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+    .expense-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    .btn-app { padding: 10px 16px; background: #1a73e8; color: #fff; border-radius: 8px; border: none; cursor: pointer; }
+    .btn-app:hover { background: #1557b0; transform: translateY(-1px); }
+    .package-card { 
+      background: #f8fafc; 
+      border: 2px solid #e2e8f0; 
+      border-radius: 8px; 
+      padding: 12px; 
+      cursor: pointer; 
+      transition: all 0.3s ease;
+    }
+    .package-card:hover { 
+      border-color: #1a73e8; 
+      background: #eef5ff; 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26,115,232,0.2);
+    }
+    .package-card.selected { 
+      border-color: #1a73e8; 
+      background: #dbeafe; 
+      box-shadow: 0 4px 12px rgba(26,115,232,0.3);
+    }
+
+    /* ===== Modal Styles ===== */
+    .modal { 
+      display: none; position: fixed; width: 600px; background: #fff;
+      border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      z-index: 1003; padding: 24px; max-height: 80vh; overflow-y: auto;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .modal.active { display: block; }
+    .modal-header { 
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;
+    }
+    .modal-header h5 { 
+      margin: 0; font-size: 20px; color: #111827; font-weight: 600;
+    }
+    .close-btn {
+      background: none; border: none; font-size: 24px; cursor: pointer;
+      color: #6b7280; transition: color 0.2s; padding: 4px;
+    }
+    .close-btn:hover { color: #111827; }
+
+    .modal-form { margin: 16px 0; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-weight: 500; margin-bottom: 6px; color: #374151; font-size: 14px; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+    .form-group input:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
+
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-primary { background: #1a73e8; color: #fff; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-primary:hover { background: #1557b0; transform: translateY(-1px); }
+    .btn-secondary { background: #6b7280; color: #fff; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-secondary:hover { background: #4b5563; transform: translateY(-1px); }
+    .btn-danger { background: #ef4444; color: #fff; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; }
+    .btn-danger:hover { background: #dc2626; }
+
+    .stats-detail-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .stats-detail-table th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; border-bottom: 1px solid #d1d5db; font-size: 13px; }
+    .stats-detail-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .stats-detail-table tr:last-child td { border-bottom: none; }
+
+    .overlay {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+      z-index: 1002; backdrop-filter: blur(4px);
+    }
+    .overlay.active { display: block; }
+
+    @media (max-width: 900px) { 
+      .left-panel { display: none; } 
+      .main-content { left: 0; width: 100%; } 
+      .modal { width: 90%; max-width: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <a href="/phuongtien" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Phương tiện</a>
+    <div class="desc">Thống kê và phân tích chi phí bảo dưỡng, sửa chữa của phương tiện.</div>
+  </div>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="d-flex">
+        <a href="/thongtinphuongtien/<%= id_xe %>" class="nav-btn">← Về thông tin</a>
+        <a href="/dangxuat" class="nav-btn">Đăng xuất</a>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Danh sách gói dịch vụ có sẵn -->
+      <div class="card">
+        <div class="card-header">Chọn từ danh sách gói dịch vụ</div>
+        <div class="card-body">
+          <div id="packagesList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:12px;">
+            <div style="grid-column:1/-1; text-align:center; color:#999; padding:20px;">Đang tải danh sách...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form nhập dữ liệu chi phí -->
+      <div class="card">
+        <div class="card-header">Thêm chi phí phát sinh</div>
+        <div class="card-body">
+          <form id="addExpenseForm" class="form-section">
+            <div>
+              <label class="form-label">Loại dịch vụ</label>
+              <select id="serviceType" name="id_danh_muc" class="form-control" required>
+                <option value="">-- Chọn loại dịch vụ --</option>
+                <option value="1">Bảo dưỡng</option>
+                <option value="2">Sửa chữa</option>
+                <option value="3">Sạc xe</option>
+                <option value="4">Đăng kiểm</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Số tiền (VND)</label>
+              <input type="number" id="amount" name="so_tien" class="form-control" placeholder="0" min="0" required />
+            </div>
+            <div>
+              <label class="form-label">Ngày phát sinh</label>
+              <input type="date" id="dateOccurred" name="ngay_phat_sinh" class="form-control" required />
+            </div>
+            <div>
+              <label class="form-label">Ghi chú (tùy chọn)</label>
+              <input type="text" id="notes" name="ghi_chu" class="form-control" placeholder="Ghi chú..." />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="submit" class="btn-app" style="width:100%;"><i class="fas fa-plus"></i> Thêm chi phí</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Form chọn kỳ thống kê -->
+      <div class="card">
+        <div class="card-header">Chọn kỳ thống kê</div>
+        <div class="card-body">
+          <div class="form-section">
+            <div>
+              <label class="form-label">Từ ngày</label>
+              <input type="date" id="fromDate" class="form-control" />
+            </div>
+            <div>
+              <label class="form-label">Đến ngày</label>
+              <input type="date" id="toDate" class="form-control" />
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+              <button id="filterBtn" class="btn-app"><i class="fas fa-chart-pie"></i> Thống kê</button>
+              <button id="resetBtn" class="btn-app" style="background:#6b7280;">↻ Đặt lại</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thống kê kết quả -->
+      <div class="card">
+        <div class="card-header">Kết quả thống kê</div>
+        <div class="card-body">
+          <!-- Nút lưu thống kê -->
+          <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="saveStatsBtn" class="btn-app" style="background:#10b981;">💾 Lưu thống kê</button>
+            <button id="viewSavedStatsBtn" class="btn-app" style="background:#0ea5e9;">📈 Xem đã lưu</button>
+          </div>
+
+          <!-- Biểu đồ tròn -->
+          <div style="grid-column: 1/-1;">
+            <div class="chart-container">
+              <canvas id="expenseChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Thống kê tổng -->
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Tổng chi phí</div>
+              <div class="stat-value" id="totalExpense">0 VND</div>
+            </div>
+          </div>
+
+          <!-- Chi tiết theo từng mục -->
+          <h5 style="margin-top:30px; margin-bottom:15px; font-weight:600;">Chi tiết theo loại dịch vụ:</h5>
+          <table class="expense-table">
+            <thead>
+              <tr>
+                <th>Loại dịch vụ</th>
+                <th>Số tiền</th>
+                <th>Tỷ lệ (%)</th>
+              </tr>
+            </thead>
+            <tbody id="detailTableBody">
+              <tr>
+                <td colspan="3" style="text-align:center; color:#999;">Chọn kỳ thống kê để xem chi tiết</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Danh sách chi phí đã nhập -->
+          <h5 style="margin-top:30px; margin-bottom:15px; font-weight:600;">Danh sách chi phí đã nhập:</h5>
+          <table class="expense-table">
+            <thead>
+              <tr>
+                <th>Loại dịch vụ</th>
+                <th>Ngày phát sinh</th>
+                <th>Số tiền</th>
+                <th>Ghi chú</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="expenseListBody">
+              <tr>
+                <td colspan="5" style="text-align:center; color:#999;">Chưa có chi phí nào</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lưu Thống kê -->
+  <div id="saveStatsModal" class="modal">
+    <div class="modal-header">
+      <h5><i class="fas fa-save"></i> Lưu thống kê</h5>
+      <button class="close-btn" onclick="closeSaveStatsModal()">&times;</button>
+    </div>
+    <div class="modal-form">
+      <div class="form-group">
+        <label for="statsName">Tên thống kê</label>
+        <input type="text" id="statsName" placeholder="Nhập tên thống kê (vd: Thống kê tháng 1)" required />
+      </div>
+      <div style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+        <strong>Kỳ:</strong> <span id="statsDateRange">-</span><br>
+        <strong>Tổng chi phí:</strong> <span id="statsTotalAmount">-</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeSaveStatsModal()">Hủy</button>
+      <button class="btn-primary" onclick="confirmSaveStats()"><i class="fas fa-check"></i> Lưu</button>
+    </div>
+  </div>
+
+  <!-- Modal Xem Chi tiết Thống kê -->
+  <div id="viewStatsModal" class="modal">
+    <div class="modal-header">
+      <h5><i class="fas fa-chart-pie"></i> Chi tiết thống kê</h5>
+      <button class="close-btn" onclick="closeViewStatsModal()">&times;</button>
+    </div>
+    <div id="viewStatsContent"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="deleteStatDetailBtn" onclick="deleteCurrentStat()"><i class="fas fa-trash-alt"></i> Xóa</button>
+      <button class="btn-secondary" onclick="closeViewStatsModal()">Đóng</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="modalOverlay" onclick="closeAllModals()"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const vehicleId = new URLSearchParams(window.location.search).get('id_xe');
+    const serviceTypeMap = {
+      '1': 'Bảo dưỡng',
+      '2': 'Sửa chữa',
+      '3': 'Sạc xe',
+      '4': 'Đăng kiểm'
+    };
+    const loaiMap = {
+      'bao_duong': '1',
+      'dang_kiem': '4'
+    };
+
+    let chart = null;
+    let allExpenses = [];
+    let selectedPackageId = null;
+    let lastStatsData = null; // Lưu dữ liệu thống kê cuối cùng
+
+    // Khởi tạo ngày cho filter (30 ngày gần đây)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+
+    document.getElementById('toDate').valueAsDate = today;
+    document.getElementById('fromDate').valueAsDate = thirtyDaysAgo;
+
+    // Load danh sách gói dịch vụ
+    async function loadPackages() {
+      try {
+        const res = await fetch(`/api/bao_duong/${vehicleId}`);
+        if (!res.ok) throw new Error('Lỗi khi tải gói dịch vụ');
+        const packages = await res.json();
+        renderPackages(packages);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('packagesList').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999;">Không thể tải danh sách gói dịch vụ</div>';
+      }
+    }
+
+    function renderPackages(packages) {
+      const container = document.getElementById('packagesList');
+      if (!packages || packages.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999; padding:20px;">Chưa có gói dịch vụ nào</div>';
+        return;
+      }
+
+      container.innerHTML = packages.map(pkg => {
+        const ngayTh = pkg.ngay_thuc_hien ? new Date(pkg.ngay_thuc_hien).toLocaleDateString('vi-VN') : '-';
+        const ngayHet = pkg.ngay_het_han ? new Date(pkg.ngay_het_han).toLocaleDateString('vi-VN') : '-';
+        const loaiName = pkg.loai === 'bao_duong' ? 'Bảo dưỡng' : 'Đăng kiểm';
+        let statusBadge = '';
+        if (pkg.trang_thai === 'con_han') statusBadge = '<span class="package-status" style="background:#d1fae5; color:#065f46;">Còn hạn</span>';
+        else if (pkg.trang_thai === 'sap_het_han') statusBadge = '<span class="package-status" style="background:#fef3c7; color:#92400e;">Sắp hết</span>';
+        else statusBadge = '<span class="package-status" style="background:#fee2e2; color:#991b1b;">Hết hạn</span>';
+
+        return `
+          <div class="package-card" onclick="selectPackage(${pkg.id}, '${loaiMap[pkg.loai]}', '${pkg.ngay_thuc_hien}')">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div class="package-title">${loaiName}</div>
+              <span style="font-size:11px; background:#f0f0f0; padding:2px 6px; border-radius:3px; color:#666;">ID: ${pkg.id}</span>
+            </div>
+            <div class="package-date">Thực hiện: ${ngayTh}</div>
+            <div class="package-date">Hết hạn: ${ngayHet}</div>
+            <div class="package-date">Chu kỳ: ${pkg.chu_ky_thang} tháng</div>
+            ${statusBadge}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectPackage(packageId, loai, ngayThucHien) {
+      selectedPackageId = packageId;
+      // Cập nhật form
+      document.getElementById('serviceType').value = loai;
+      
+      // Chuyển ngày_thuc_hien thành format YYYY-MM-DD
+      const date = new Date(ngayThucHien);
+      const formattedDate = date.toISOString().split('T')[0];
+      document.getElementById('dateOccurred').value = formattedDate;
+      
+      // Focus vào input số tiền
+      document.getElementById('amount').focus();
+      
+      // Highlight card được chọn
+      document.querySelectorAll('.package-card').forEach(card => card.classList.remove('selected'));
+      event.target.closest('.package-card').classList.add('selected');
+      
+      // Scroll to form
+      document.getElementById('addExpenseForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Load dữ liệu chi phí
+    async function loadExpenses() {
+      try {
+        const res = await fetch(`/api/chi_phi/${vehicleId}`);
+        if (!res.ok) throw new Error('Lỗi khi tải chi phí');
+        allExpenses = await res.json();
+        renderExpenseList();
+        performStats();
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi khi tải dữ liệu chi phí');
+      }
+    }
+
+    // Thêm chi phí mới
+    document.getElementById('addExpenseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = {
+        id_xe: vehicleId,
+        id_danh_muc: formData.get('id_danh_muc'),
+        so_tien: parseFloat(formData.get('so_tien')),
+        ngay_phat_sinh: formData.get('ngay_phat_sinh'),
+        ghi_chu: formData.get('ghi_chu') || null
+      };
+
+      console.log('Gửi dữ liệu chi phí:', data);
+
+      try {
+        const res = await fetch('/api/chi_phi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const responseText = await res.text();
+        console.log('Response status:', res.status, 'Response body:', responseText);
+
+        if (!res.ok) {
+          try {
+            const errorData = JSON.parse(responseText);
+            throw new Error(errorData.error || 'Lỗi khi thêm chi phí');
+          } catch {
+            throw new Error('Lỗi khi thêm chi phí: ' + responseText);
+          }
+        }
+        
+        alert('Thêm chi phí thành công!');
+        e.target.reset();
+        selectedPackageId = null;
+        document.querySelectorAll('.package-card').forEach(card => card.classList.remove('selected'));
+        await loadExpenses();
+        // Tự động chạy thống kê lại
+        setTimeout(() => performStats(), 300);
+      } catch (err) {
+        console.error('Chi tiết lỗi:', err);
+        alert('Lỗi khi thêm chi phí: ' + err.message);
+      }
+    });
+
+    // Thống kê
+    document.getElementById('filterBtn').addEventListener('click', () => {
+      performStats();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      document.getElementById('toDate').valueAsDate = today;
+      document.getElementById('fromDate').valueAsDate = thirtyDaysAgo;
+      performStats();
+    });
+
+    async function performStats() {
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+
+      if (!fromDate || !toDate) {
+        alert('Vui lòng chọn khoảng thời gian!');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/chi_phi/thongke/${vehicleId}?from_date=${fromDate}&to_date=${toDate}`);
+        if (!res.ok) throw new Error('Lỗi khi thống kê');
+        const result = await res.json();
+
+        // Lưu dữ liệu thống kê cuối cùng
+        lastStatsData = result;
+
+        // Cập nhật tổng chi phí
+        const totalExpense = result.tong_chi_phi || 0;
+        document.getElementById('totalExpense').textContent = totalExpense.toLocaleString('vi-VN') + ' VND';
+
+        // Vẽ biểu đồ
+        const details = result.chi_tiet || [];
+        drawChart(details);
+
+        // Cập nhật bảng chi tiết
+        updateDetailTable(details, totalExpense);
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi khi thống kê: ' + err.message);
+      }
+    }
+
+    function drawChart(data) {
+      const chartElement = document.getElementById('expenseChart');
+      if (!chartElement) {
+        console.error('Lỗi: Không tìm thấy phần tử canvas #expenseChart');
+        return;
+      }
+
+      const chartContainer = chartElement.parentElement;
+      const noDataMsg = chartContainer.querySelector('.no-data-msg');
+      
+      // Nếu không có dữ liệu, hiển thị thông báo
+      if (!data || data.length === 0) {
+        chartElement.style.display = 'none';
+        
+        // Nếu chưa có thông báo, tạo mới
+        if (!noDataMsg) {
+          const msg = document.createElement('div');
+          msg.className = 'no-data-msg';
+          msg.style.cssText = 'text-align:center; color:#999; padding:40px;';
+          msg.textContent = 'Không có dữ liệu chi phí trong kỳ này';
+          chartContainer.appendChild(msg);
+        } else {
+          noDataMsg.style.display = 'block';
+        }
+        return;
+      }
+
+      // Nếu có dữ liệu, hiển thị canvas
+      chartElement.style.display = 'block';
+      if (noDataMsg) {
+        noDataMsg.style.display = 'none';
+      }
+
+      const ctx = chartElement.getContext('2d');
+
+      if (chart) {
+        chart.destroy();
+      }
+
+      const labels = data.map(item => serviceTypeMap[item.id_danh_muc] || item.id_danh_muc);
+      const values = data.map(item => item.so_tien);
+      const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
+      chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length),
+            borderColor: '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function updateDetailTable(data, total) {
+      const tbody = document.getElementById('detailTableBody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Không có dữ liệu</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        const percentage = ((item.so_tien / total) * 100).toFixed(1);
+        return `
+          <tr>
+            <td>${serviceTypeMap[item.id_danh_muc] || item.id_danh_muc}</td>
+            <td>${item.so_tien.toLocaleString('vi-VN')} VND</td>
+            <td>${percentage}%</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderExpenseList() {
+      const tbody = document.getElementById('expenseListBody');
+      if (allExpenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">Chưa có chi phí nào</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allExpenses.map(expense => {
+        const date = new Date(expense.ngay_phat_sinh).toLocaleDateString('vi-VN');
+        return `
+          <tr>
+            <td>${serviceTypeMap[expense.id_danh_muc] || expense.id_danh_muc}</td>
+            <td>${date}</td>
+            <td>${expense.so_tien.toLocaleString('vi-VN')} VND</td>
+            <td>${expense.ghi_chu || '-'}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${expense.id})">Xóa</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ===== Modal Control Functions =====
+    function openSaveStatsModal() {
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+      const totalAmount = document.getElementById('totalExpense').textContent;
+      
+      document.getElementById('statsDateRange').textContent = `${fromDate} → ${toDate}`;
+      document.getElementById('statsTotalAmount').textContent = totalAmount;
+      document.getElementById('statsName').value = '';
+      document.getElementById('statsName').focus();
+      
+      document.getElementById('saveStatsModal').classList.add('active');
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeSaveStatsModal() {
+      document.getElementById('saveStatsModal').classList.remove('active');
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function closeViewStatsModal() {
+      document.getElementById('viewStatsModal').classList.remove('active');
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function closeAllModals() {
+      closeSaveStatsModal();
+      closeViewStatsModal();
+    }
+
+    async function confirmSaveStats() {
+      if (!lastStatsData) {
+        alert('Vui lòng thực hiện thống kê trước khi lưu');
+        return;
+      }
+
+      const statsName = document.getElementById('statsName').value.trim();
+      if (!statsName) {
+        alert('Vui lòng nhập tên thống kê');
+        document.getElementById('statsName').focus();
+        return;
+      }
+
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+
+      if (!fromDate || !toDate) {
+        alert('Vui lòng chọn kỳ thống kê');
+        return;
+      }
+
+      // Lưu vào database
+      try {
+        const response = await fetch('/api/thongke/luu', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id_xe: vehicleId,
+            ten_thongke: statsName,
+            tu_ngay: fromDate,
+            den_ngay: toDate,
+            du_lieu: lastStatsData
+          })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          closeSaveStatsModal();
+          alert(`✅ Đã lưu thống kê "${statsName}" vào hệ thống`);
+          await loadSavedStats();
+        } else {
+          console.error('Lỗi khi lưu vào database:', data);
+          alert('❌ Lỗi khi lưu thống kê: ' + (data.error || 'Vui lòng thử lại'));
+        }
+      } catch (error) {
+        console.error('Lỗi khi lưu thống kê:', error);
+        alert('❌ Lỗi khi lưu thống kê: ' + error.message);
+      }
+    }
+
+    // Lưu thống kê
+    document.getElementById('saveStatsBtn').addEventListener('click', () => {
+      if (!lastStatsData) {
+        alert('Vui lòng thực hiện thống kê trước khi lưu');
+        return;
+      }
+      openSaveStatsModal();
+    });
+
+    let currentViewedStatId = null;
+
+    // Xem thống kê đã lưu
+    document.getElementById('viewSavedStatsBtn').addEventListener('click', async () => {
+      await loadSavedStats();
+    });
+
+    async function loadSavedStats() {
+      try {
+        const response = await fetch(`/api/thongke/${vehicleId}`);
+        if (!response.ok) throw new Error('Lỗi khi lấy danh sách thống kê');
+        
+        const result = await response.json();
+        const savedStats = result.data || [];
+        
+        if (savedStats.length === 0) {
+          alert('Chưa có thống kê nào được lưu');
+          return;
+        }
+
+        showSavedStatsModal(savedStats);
+      } catch (error) {
+        console.error('Lỗi:', error);
+        alert('Lỗi khi lấy danh sách thống kê: ' + error.message);
+      }
+    }
+
+    function showSavedStatsModal(savedStats) {
+      window.savedStats = savedStats;
+      let html = '<div style="max-height: 400px; overflow-y: auto;">';
+      
+      if (savedStats.length === 0) {
+        html += '<div style="text-align: center; color: #999; padding: 20px;">Chưa có thống kê nào được lưu</div>';
+      } else {
+        html += savedStats.map((stat, idx) => `
+          <div style="padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;" 
+               onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#1a73e8';" 
+               onmouseout="this.style.background='#fff'; this.style.borderColor='#ddd';"
+               onclick="showStatDetail(${idx})">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 6px; color: #1a73e8;"><i class="fas fa-chart-pie"></i> ${stat.ten_thongke}</div>
+                <div style="font-size: 13px; color: #666;">
+                  Kỳ: <strong>${stat.tu_ngay}</strong> → <strong>${stat.den_ngay}</strong><br>
+                  Lưu: ${new Date(stat.ngay_tao).toLocaleString('vi-VN')}<br>
+                  Tổng: <strong>${parseInt(stat.tong_chi_phi).toLocaleString('vi-VN')} VND</strong>
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; margin-left: 12px;">
+                <button class="btn-primary" onclick="showStatDetail(${idx}); event.stopPropagation();" style="padding: 6px 12px; font-size: 12px;">Xem</button>
+                <button class="btn-secondary" onclick="event.stopPropagation(); compareStats(${idx});" style="padding: 6px 12px; font-size: 12px;">So sánh</button>
+                <button class="btn-danger" onclick="event.stopPropagation(); deleteStatByIndex(${idx});" style="padding: 6px 12px; font-size: 12px;">Xóa</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      html += '</div>';
+      
+      document.getElementById('viewStatsContent').innerHTML = html;
+      document.getElementById('viewStatsModal').classList.add('active');
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function showStatDetail(idx) {
+      // Lấy dữ liệu từ array savedStats global
+      if (!window.savedStats || !window.savedStats[idx]) {
+        alert('Không thể tìm thấy thống kê');
+        return;
+      }
+      
+      const stat = window.savedStats[idx];
+      currentViewedStatId = stat.id;
+      
+      const chiTietData = JSON.parse(stat.chi_tiet) || stat.chi_tiet;
+      const chiTiet = chiTietData.chi_tiet || [];
+      const tongChiPhi = chiTietData.tong_chi_phi || stat.tong_chi_phi;
+      
+      let html = `
+        <div style="margin-bottom: 16px;">
+          <h6 style="margin: 0 0 12px 0; color: #374151;"><strong>${stat.ten_thongke}</strong></h6>
+          <div style="font-size: 13px; color: #666; line-height: 1.6;">
+            <strong>Kỳ:</strong> ${stat.tu_ngay} → ${stat.den_ngay}<br>
+            <strong>Lưu:</strong> ${new Date(stat.ngay_tao).toLocaleString('vi-VN')}<br>
+            <strong>Tổng chi phí:</strong> <span style="color: #ef4444; font-weight: 600;">${parseInt(tongChiPhi).toLocaleString('vi-VN')} VND</span>
+          </div>
+        </div>
+
+        <h6 style="margin: 16px 0 12px 0; color: #374151; border-top: 1px solid #e5e7eb; padding-top: 12px;">Chi tiết theo loại dịch vụ:</h6>
+        <table class="stats-detail-table">
+          <thead>
+            <tr>
+              <th>Loại dịch vụ</th>
+              <th style="text-align: right;">Số tiền</th>
+              <th style="text-align: right;">Tỷ lệ (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${chiTiet.map(item => {
+              const percentage = ((item.so_tien / tongChiPhi) * 100).toFixed(1);
+              return `
+                <tr>
+                  <td>${serviceTypeMap[item.id_danh_muc] || 'N/A'}</td>
+                  <td style="text-align: right;">${parseInt(item.so_tien).toLocaleString('vi-VN')} VND</td>
+                  <td style="text-align: right;">${percentage}%</td>
+                </tr>
+              `;
+            }).join('')}
+            <tr style="font-weight: 600; background: #f3f4f6; border-top: 2px solid #d1d5db;">
+              <td>TỔNG CỘNG</td>
+              <td style="text-align: right;">${parseInt(tongChiPhi).toLocaleString('vi-VN')} VND</td>
+              <td style="text-align: right;">100%</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('viewStatsContent').innerHTML = html;
+    }
+
+    function deleteStatByIndex(idx) {
+      if (!confirm('Xóa thống kê này?')) return;
+      
+      const stat = window.savedStats[idx];
+      if (!stat || !stat.id) {
+        alert('Không thể xóa thống kê này');
+        return;
+      }
+
+      // Xóa từ database
+      fetch(`/api/thongke/${stat.id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            loadSavedStats();
+            closeViewStatsModal();
+          } else {
+            alert('Lỗi: ' + (data.error || 'Không thể xóa'));
+          }
+        })
+        .catch(err => {
+          console.error('Lỗi:', err);
+          alert('Lỗi khi xóa thống kê: ' + err.message);
+        });
+    }
+
+    function deleteCurrentStat() {
+      if (currentViewedStatId !== null) {
+        // Tìm index của stat hiện tại trong array
+        const idx = window.savedStats.findIndex(s => s.id === currentViewedStatId);
+        if (idx !== -1) {
+          deleteStatByIndex(idx);
+        }
+      }
+    }
+
+    function compareStats(idx1) {
+      const savedStats = window.savedStats || [];
+      
+      if (savedStats.length < 2) {
+        alert('Cần ít nhất 2 thống kê để so sánh');
+        return;
+      }
+
+      // Hiển thị danh sách chọn
+      let selectHTML = '<div style="margin-bottom: 16px;"><label style="font-weight: 500; color: #374151; margin-bottom: 8px; display: block;">Chọn thống kê để so sánh với:</label>';
+      selectHTML += '<select id="compareSelect" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">';
+      
+      savedStats.forEach((stat, idx) => {
+        if (idx !== idx1) {
+          selectHTML += `<option value="${idx}">${stat.ten_thongke} (${stat.tu_ngay} → ${stat.den_ngay})</option>`;
+        }
+      });
+      
+      selectHTML += '</select></div>';
+      selectHTML += '<button class="btn-primary" onclick="performComparison(' + idx1 + ')" style="margin-bottom: 20px;"><i class="fas fa-sync"></i> So sánh</button>';
+      selectHTML += '<div id="comparisonResult"></div>';
+      
+      document.getElementById('viewStatsContent').innerHTML = selectHTML;
+    }
+
+    function performComparison(idx1) {
+      const idx2 = parseInt(document.getElementById('compareSelect').value);
+      const savedStats = window.savedStats || [];
+      const stat1 = savedStats[idx1];
+      const stat2 = savedStats[idx2];
+
+      const chiTiet1 = JSON.parse(stat1.chi_tiet).chi_tiet || [];
+      const chiTiet2 = JSON.parse(stat2.chi_tiet).chi_tiet || [];
+      const total1 = stat1.tong_chi_phi;
+      const total2 = stat2.tong_chi_phi;
+
+      let comparisonHTML = `
+        <h6 style="margin: 16px 0 12px 0; color: #374151; border-top: 1px solid #e5e7eb; padding-top: 12px;">Kết quả so sánh</h6>
+        <table class="stats-detail-table">
+          <thead>
+            <tr>
+              <th>Loại dịch vụ</th>
+              <th style="text-align: right;">${stat1.ten_thongke}</th>
+              <th style="text-align: right;">${stat2.ten_thongke}</th>
+              <th style="text-align: right;">Chênh lệch</th>
+              <th style="text-align: right;">Thay đổi (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      // Tạo map dữ liệu
+      const map1 = {};
+      const map2 = {};
+      chiTiet1.forEach(item => map1[item.id_danh_muc] = item.so_tien);
+      chiTiet2.forEach(item => map2[item.id_danh_muc] = item.so_tien);
+
+      // Tất cả ID dịch vụ
+      const allIds = new Set([...Object.keys(map1), ...Object.keys(map2)]);
+      
+      allIds.forEach(id => {
+        const val1 = map1[id] || 0;
+        const val2 = map2[id] || 0;
+        const diff = val2 - val1;
+        const pct = val1 > 0 ? ((diff / val1) * 100).toFixed(1) : 0;
+        const rowColor = diff > 0 ? '#fef3c7' : diff < 0 ? '#dbeafe' : '#fff';
+        
+        comparisonHTML += `
+          <tr style="background: ${rowColor};">
+            <td>${serviceTypeMap[id] || 'N/A'}</td>
+            <td style="text-align: right;">${parseInt(val1).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right;">${parseInt(val2).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right; color: ${diff > 0 ? '#ef4444' : diff < 0 ? '#10b981' : '#6b7280'};">${diff > 0 ? '+' : ''}${parseInt(diff).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right; font-weight: 600; color: ${diff > 0 ? '#ef4444' : diff < 0 ? '#10b981' : '#6b7280'};">${diff > 0 ? '+' : ''}${pct}%</td>
+          </tr>
+        `;
+      });
+
+      const totalDiff = total2 - total1;
+      const totalPct = total1 > 0 ? ((totalDiff / total1) * 100).toFixed(1) : 0;
+
+      comparisonHTML += `
+          <tr style="font-weight: 600; background: #f3f4f6; border-top: 2px solid #d1d5db;">
+            <td>TỔNG CỘNG</td>
+            <td style="text-align: right;">${parseInt(total1).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right;">${parseInt(total2).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right; color: ${totalDiff > 0 ? '#ef4444' : totalDiff < 0 ? '#10b981' : '#6b7280'};">${totalDiff > 0 ? '+' : ''}${parseInt(totalDiff).toLocaleString('vi-VN')} VND</td>
+            <td style="text-align: right; color: ${totalDiff > 0 ? '#ef4444' : totalDiff < 0 ? '#10b981' : '#6b7280'};">${totalDiff > 0 ? '+' : ''}${totalPct}%</td>
+          </tr>
+        </tbody>
+        </table>
+      `;
+
+      document.getElementById('comparisonResult').innerHTML = comparisonHTML;
+    }
+
+    async function deleteExpense(expenseId) {
+      if (!confirm('Bạn có chắc muốn xóa chi phí này?')) return;
+      try {
+        const res = await fetch(`/api/chi_phi/${expenseId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Lỗi khi xóa chi phí');
+        alert('Xóa chi phí thành công!');
+        loadExpenses();
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi khi xóa chi phí: ' + err.message);
+      }
+    }
+
+    // Load ban đầu
+    loadPackages();
+    loadExpenses();
+  </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>myCARe - Thông tin tài khoản</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  body { margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; overflow: auto; }
+  .content, .main-content, .content-area { overflow-y: auto; }
+    
+    .left-panel {
+      position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #fff; z-index: 1002;
+      border-right: 1px solid #e6e9ee; padding: 24px; box-shadow: 2px 0 8px rgba(15,23,42,0.04);
+    }
+    .left-panel .logo {
+      font-family: 'Modak', cursive;
+      font-size: 36px;
+      background: linear-gradient(90deg, #1a73e8, #03f007);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+    }
+    .left-panel .desc { color: #6b7280; font-size: 15px; line-height: 1.5; margin: 16px 0; }
+    
+    .main-content {
+      position: absolute; top: 0; left: 320px; width: calc(100% - 320px); height: 100vh; padding: 24px;
+      display: flex; flex-direction: column;
+    }
+    .top-bar {
+      display: flex; justify-content: flex-end; padding: 8px 0; margin-bottom: 20px;
+    }
+    .nav-btn {
+      background: #1a73e8; border: none; padding: 10px 20px; margin: 0 8px; color: #fff;
+      font-size: 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-btn:hover { background: #1557b0; transform: translateY(-1px); color: #fff; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .content-area {
+      flex: 1; display: flex; justify-content: center; align-items: center;
+      padding: 20px; margin-top: 20px;
+    }
+    .info-card {
+      width: 100%; max-width: 600px; background: #fff; border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(17,24,39,0.05); overflow: hidden;
+    }
+    .info-header {
+      background: #1a73e8; color: #fff; padding: 24px; text-align: center;
+      font-size: 24px; font-weight: 600;
+    }
+    .info-body {
+      padding: 32px; background: #fff;
+    }
+    .info-item {
+      margin-bottom: 20px; text-align: left;
+    }
+    .info-label {
+      font-weight: 500; color: #4b5563; display: block;
+      margin-bottom: 8px; font-size: 15px;
+    }
+    .info-value {
+      color: #1f2937; padding: 12px 16px; background: #f9fafb;
+      border-radius: 8px; display: block; font-size: 15px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .btn-app {
+      width: 100%; max-width: 300px; padding: 12px; font-size: 16px;
+      border-radius: 8px; margin: 16px 0; font-weight: 500;
+      background: #1a73e8; color: #fff; border: none;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .btn-app:hover { background: #1557b0; transform: translateY(-1px); }
+
+    /* Modal styles */
+    .modal {
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+      backdrop-filter: blur(4px); z-index: 1010;
+    }
+    .modal-content {
+      background: #fff; padding: 32px; border-radius: 12px;
+      width: 90%; max-width: 450px; position: relative;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+    .modal-title {
+      font-size: 20px; font-weight: 600; color: #111827;
+      margin-bottom: 24px; text-align: center;
+    }
+    .close {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 24px; cursor: pointer; color: #6b7280;
+      border: none; background: none; padding: 4px;
+      transition: all 0.2s;
+    }
+    .close:hover { color: #111827; transform: rotate(90deg); }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      font-weight: 500; color: #4b5563; margin-bottom: 8px;
+      display: block; font-size: 15px;
+    }
+    .form-input {
+      width: 100%; padding: 10px 12px; font-size: 15px;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+      outline: none;
+    }
+    .error {
+      color: #dc2626; font-size: 14px; margin-top: 6px;
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .main-content { left: 0; width: 100%; }
+      .info-card { margin: 0 16px; }
+      .modal-content { margin: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <a href="/phuongtien" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Phương tiện</a>
+    <div class="desc">
+      Xem và quản lý thông tin tài khoản của bạn trên ứng dụng myCARe.
+    </div>
+    <div class="desc" style="margin-top:32px;">
+      Các thao tác:
+      <ul style="margin-top:8px; color:#374151;">
+        <li>• Xem thông tin cá nhân</li>
+        <li>• Đổi mật khẩu</li>
+        <li>• Bảo mật tài khoản</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="d-flex">
+        <a href="/" class="nav-btn">Về trang chủ</a>
+        <a href="/dangxuat" class="nav-btn btn-danger">Đăng xuất</a>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="info-card">
+        <div class="info-header">
+          Thông tin tài khoản
+        </div>
+        <div class="info-body">
+          <% if (user) { %>
+            <div class="info-item">
+              <label class="info-label">Tên tài khoản</label>
+              <span class="info-value"><%= user.tentaikhoan %></span>
+            </div>
+            <div class="info-item">
+              <label class="info-label">Email</label>
+              <span class="info-value">
+                <%= user.email || 'Chưa cập nhật' %>
+              </span>
+            </div>
+            <div class="info-item">
+              <label class="info-label">Số điện thoại</label>
+              <span class="info-value">
+                <% 
+                  console.log("Debug sdt:", user.sdt, "Type:", typeof user.sdt, "Length:", user.sdt ? user.sdt.length : 'N/A');
+                  if (user.sdt && typeof user.sdt === 'string' && user.sdt.length >= 9) { %>
+                    <%= user.sdt.substring(0, 3) %>****<%= user.sdt.substring(user.sdt.length - 3) %>
+                <% } else { %>
+                  Chưa cập nhật (Debug: <%= user.sdt %>)
+                <% } %>
+              </span>
+            </div>
+            <div class="text-center">
+              <button class="btn-app" onclick="openModal()">
+                Đổi mật khẩu
+              </button>
+              <a href="/ghichucanhan" class="btn-app" style="display: inline-block; text-decoration: none; background: #10b981;">
+                Ghi chú cá nhân
+              </a>
+            </div>
+          <% } else { %>
+            <p class="text-center text-red-500">
+              Bạn chưa đăng nhập. Vui lòng 
+              <a href="/dangnhap" class="text-blue-500 hover:text-blue-700 underline">
+                đăng nhập
+              </a> 
+              để xem thông tin.
+            </p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Đổi mật khẩu -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div class="modal-title">Đổi mật khẩu</div>
+      <div class="form-group">
+        <label class="form-label" for="currentPassword">Mật khẩu hiện tại</label>
+        <input type="password" id="currentPassword" class="form-input"
+               placeholder="Nhập mật khẩu hiện tại">
+        <span class="error" id="currentPasswordError">Mật khẩu hiện tại không đúng</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="newPassword">Mật khẩu mới</label>
+        <input type="password" id="newPassword" class="form-input"
+               placeholder="Nhập mật khẩu mới">
+        <span class="error" id="newPasswordError">Mật khẩu mới phải từ 6 ký tự</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Xác nhận mật khẩu mới</label>
+        <input type="password" id="confirmPassword" class="form-input"
+               placeholder="Xác nhận mật khẩu mới">
+        <span class="error" id="confirmPasswordError">Mật khẩu không khớp</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="phoneNumber">Xác thực số điện thoại</label>
+        <input type="text" id="phoneNumber" class="form-input"
+               placeholder="Nhập số điện thoại đã đăng ký">
+        <span class="error" id="phoneNumberError">Số điện thoại không khớp</span>
+      </div>
+      <div class="text-center">
+        <button class="btn-app" onclick="changePassword()">
+          Xác nhận thay đổi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById('passwordModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('passwordModal').style.display = 'none';
+      // Reset form
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('phoneNumber').value = '';
+      document.getElementById('currentPasswordError').style.display = 'none';
+      document.getElementById('newPasswordError').style.display = 'none';
+      document.getElementById('confirmPasswordError').style.display = 'none';
+      document.getElementById('phoneNumberError').style.display = 'none';
+    }
+
+    function changePassword() {
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const phoneNumber = document.getElementById('phoneNumber').value;
+
+      // Ẩn tất cả thông báo lỗi
+      document.getElementById('currentPasswordError').style.display = 'none';
+      document.getElementById('newPasswordError').style.display = 'none';
+      document.getElementById('confirmPasswordError').style.display = 'none';
+      document.getElementById('phoneNumberError').style.display = 'none';
+
+      // Kiểm tra điều kiện
+      if (!currentPassword || !newPassword || !confirmPassword || !phoneNumber) {
+        alert('Vui lòng điền đầy đủ thông tin');
+        return;
+      }
+      if (newPassword.length < 6) {
+        document.getElementById('newPasswordError').style.display = 'block';
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        document.getElementById('confirmPasswordError').style.display = 'block';
+        return;
+      }
+      if (phoneNumber !== '<%= user.sdt || "" %>') {
+        document.getElementById('phoneNumberError').style.display = 'block';
+        return;
+      }
+
+      // Gửi yêu cầu đổi mật khẩu
+      fetch('/thongtinnguoidung/doimatkhau', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+          phoneNumber: phoneNumber
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Đổi mật khẩu thành công');
+          closeModal();
+        } else {
+          document.getElementById('currentPasswordError').style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Lỗi:', error);
+        alert('Có lỗi xảy ra khi đổi mật khẩu');
+      });
+    }
+
+    // Đóng modal khi nhấn ngoài vùng
+    window.onclick = function(event) {
+      const modal = document.getElementById('passwordModal');
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

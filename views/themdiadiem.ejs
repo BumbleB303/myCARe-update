@@ -2,18 +2,164 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Thêm địa điểm</title>
+  <title>Thêm địa điểm - myCARe</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  body { margin: 0; font-family: 'Arial', sans-serif; background: #f0f2f5; overflow: auto; }
+  .content, .main-content, .content-area { overflow-y: auto; }
+    
+    .left-panel {
+      position: fixed; top: 0; left: 0; width: 320px; height: 100vh; background: #fff; z-index: 1002;
+      border-right: 1px solid #e6e9ee; padding: 24px; box-shadow: 2px 0 8px rgba(15,23,42,0.04);
+    }
+    .left-panel .logo {
+      font-family: 'Modak', cursive;
+      font-size: 36px;
+      background: linear-gradient(90deg, #1a73e8, #03f007);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+    }
+    .left-panel .desc { color: #6b7280; font-size: 15px; line-height: 1.5; margin: 16px 0; }
+    
+    .main-content {
+      position: absolute; top: 0; left: 320px; width: calc(100% - 320px); height: 100vh; padding: 24px;
+      display: flex; flex-direction: column;
+    }
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    }
+
+      .user-info {
+      margin-top: 300px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .user-info .name {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    .user-info .role {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .nav-btn {
+      background: #1a73e8; border: none; padding: 10px 20px; margin: 0 8px; color: #fff;
+      font-size: 15px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+      text-decoration: none;
+    }
+    .nav-btn:hover { background: #1557b0; transform: translateY(-1px); color: #fff; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .content-area {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 40px 20px;
+    }
+    .header-text {
+      font-size: 28px; color: #1f2937; margin-bottom: 40px;
+      font-weight: 600; text-align: center;
+    }
+    
+    .location-types {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px; max-width: 800px; width: 100%; margin: 0 auto;
+    }
+    .location-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 20px; border-radius: 12px; text-decoration: none;
+      background: #fff; box-shadow: 0 4px 16px rgba(17,24,39,0.05);
+      transition: all 0.2s; border: 1px solid #e5e7eb;
+    }
+    .location-btn i { font-size: 32px; margin-bottom: 16px; }
+    .location-btn span { font-size: 18px; font-weight: 500; }
+    
+    .charging-btn { color: #1a73e8; }
+    .charging-btn:hover { background: #f0f9ff; transform: translateY(-4px); border-color: #1a73e8; color: #1557b0; }
+    .repair-btn { color: #f59e0b; }
+    .repair-btn:hover { background: #fffbeb; transform: translateY(-4px); border-color: #f59e0b; color: #d97706; }
+    .parking-btn { color: #3b82f6; }
+    .parking-btn:hover { background: #eff6ff; transform: translateY(-4px); border-color: #3b82f6; color: #2563eb; }
+
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 8px; margin-top: 32px;
+      background: #6b7280; color: #fff; text-decoration: none;
+      font-size: 15px; transition: all 0.2s;
+    }
+    .back-btn:hover { background: #4b5563; transform: translateY(-1px); color: #fff; }
+
+    @media (max-width: 900px) { .left-panel { display: none; } .main-content { left: 0; width: 100%; } .location-types { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body class="container mt-4">
-  <h2>Chọn loại địa điểm cần thêm</h2>
-  <div class="mt-3">
-    <a class="btn btn-primary me-2" href="/themdiadiem/tramsac">Trạm sạc</a>
-    <a class="btn btn-warning me-2" href="/themdiadiem/trungtamsuachua">Trung tâm sửa chữa</a>
-    <a class="btn btn-info" href="/themdiadiem/baidoxe">Bãi đỗ xe</a>
+<body>
+  <div class="left-panel">
+    <div class="logo">myCARe</div>
+    <a href="/" class="nav-btn" style="display:block; margin-bottom:12px; text-decoration:none; text-align:left;">Trang chủ</a>
+    <div class="desc">Thêm địa điểm mới vào hệ thống quản lý dịch vụ xe điện tại Hà Nội.</div>
+    <div class="desc" style="margin-top:32px;">
+      Các loại địa điểm:
+      <ul style="margin-top:8px; color:#374151;">
+        <li>• Trạm sạc xe điện</li>
+        <li>• Trung tâm sửa chữa</li>
+        <li>• Bãi đỗ xe điện</li>
+        <li>• Trung tâm đăng kiểm</li>
+      </ul>
+    </div>
+
+    <div class="user-info">
+      <% if (!user) { %>
+        <div style="text-align:center;">
+          <div style="margin-bottom:8px; color:#1f2937; font-weight:600;">Khách</div>
+          <a class="nav-btn" href="/dangnhap" style="display:inline-block;">Đăng nhập</a>
+        </div>
+      <% } else { %>
+        <div class="name"><%= user.tentaikhoan %></div>
+        <div class="role"><%= user.role === 'quantrivien' ? 'Quản trị viên' : 'Người dùng' %></div>
+      <% } %>
+    </div>
+
   </div>
-  <div class="mt-3">
-    <a href="/quanly/diadiem" class="btn btn-secondary">⬅ Quay lại quản lý</a>
+
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="logo" style="color: #1f2937; font-size: 24px; font-weight: 600;">Thêm địa điểm</div>
+      <a href="/dangxuat" class="nav-btn btn-danger">Đăng xuất</a>
+    </div>
+
+    <div class="content-area">
+      <div class="location-types">
+        <a href="/themdiadiem/tramsac" class="location-btn charging-btn">
+          <i class="fas fa-charging-station"></i>
+          <span>Trạm sạc</span>
+        </a>
+        <a href="/themdiadiem/trungtamsuachua" class="location-btn repair-btn">
+          <i class="fas fa-tools"></i>
+          <span>Trung tâm sửa chữa</span>
+        </a>
+        <a href="/themdiadiem/baidoxe" class="location-btn parking-btn">
+          <i class="fas fa-parking"></i>
+          <span>Bãi đỗ xe</span>
+        </a>
+        <a href="/themdiadiem/trungtamdangkiem" class="location-btn" style="color: #10b981;">
+          <i class="fas fa-certificate"></i>
+          <span>Đăng kiểm</span>
+        </a>
+      </div>
+
+      <a href="/quanly/diadiem" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Quay lại quản lý
+      </a>
+    </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

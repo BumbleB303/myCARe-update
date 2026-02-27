@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Test API Chi Phí</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { margin: 20px; font-family: Arial, sans-serif; }
+    .log { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px; max-height: 400px; overflow-y: auto; }
+    .log-item { margin: 5px 0; padding: 8px; border-left: 3px solid #999; }
+    .log-success { border-color: #28a745; color: #155724; background: #d4edda; }
+    .log-error { border-color: #dc3545; color: #721c24; background: #f8d7da; }
+    .log-info { border-color: #17a2b8; color: #0c5460; background: #d1ecf1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test API Thêm Chi Phí</h1>
+    
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5>Thông tin xe</h5>
+        <div class="mb-3">
+          <label class="form-label">ID Phương tiện</label>
+          <input type="number" id="vehicleId" class="form-control" placeholder="Nhập ID xe" value="1">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Loại dịch vụ</label>
+          <select id="serviceType" class="form-control">
+            <option value="1">Bảo dưỡng</option>
+            <option value="2">Sửa chữa</option>
+            <option value="3">Sạc xe</option>
+            <option value="4">Đăng kiểm</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Số tiền (VND)</label>
+          <input type="number" id="amount" class="form-control" placeholder="0" value="500000">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ngày phát sinh</label>
+          <input type="date" id="dateOccurred" class="form-control">
+        </div>
+        <button onclick="testAddExpense()" class="btn btn-primary">📤 Test Gửi Chi Phí</button>
+      </div>
+    </div>
+
+    <div class="log">
+      <strong>📋 Log:</strong>
+      <div id="logOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    // Set ngày hiện tại
+    document.getElementById('dateOccurred').valueAsDate = new Date();
+
+    function log(message, type = 'info') {
+      const logOutput = document.getElementById('logOutput');
+      const item = document.createElement('div');
+      item.className = `log-item log-${type}`;
+      item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logOutput.appendChild(item);
+      logOutput.scrollTop = logOutput.scrollHeight;
+    }
+
+    async function testAddExpense() {
+      const vehicleId = parseInt(document.getElementById('vehicleId').value);
+      const serviceType = document.getElementById('serviceType').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const dateOccurred = document.getElementById('dateOccurred').value;
+
+      if (!vehicleId || !serviceType || !amount || !dateOccurred) {
+        log('❌ Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+
+      const testData = {
+        id_xe: vehicleId,
+        id_danh_muc: parseInt(serviceType),
+        so_tien: amount,
+        ngay_phat_sinh: dateOccurred,
+        ghi_chu: 'Test từ page'
+      };
+
+      log(`📤 Gửi dữ liệu: ${JSON.stringify(testData)}`, 'info');
+
+      try {
+        const response = await fetch('/api/chi_phi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testData)
+        });
+
+        log(`Status: ${response.status}`, 'info');
+        
+        const responseText = await response.text();
+        log(`Response: ${responseText}`, 'info');
+
+        if (response.ok) {
+          try {
+            const data = JSON.parse(responseText);
+            log(`✅ Thành công! Chi phí ID: ${data.id}`, 'success');
+          } catch {
+            log(`✅ Thành công! Response: ${responseText}`, 'success');
+          }
+        } else {
+          log(`❌ Lỗi: ${responseText}`, 'error');
+        }
+      } catch (err) {
+        log(`❌ Lỗi kết nối: ${err.message}`, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

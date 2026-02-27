@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý dữ liệu thống kê - myCARe</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { margin: 0; background:#f0f2f5; font-family:Arial,sans-serif; }
+    .left-panel {
+      position: fixed; top: 0; left: 0; width: 320px; height: 100vh;
+      background:#fff; border-right:1px solid #e6e9ee; padding:24px;
+      box-shadow:2px 0 8px rgba(0,0,0,0.05);
+    }
+    .logo {
+      font-family:'Modak',cursive; font-size:36px;
+      background:linear-gradient(90deg,#1a73e8,#03f007);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .main-content {
+      margin-left:320px; padding:24px;
+    }
+    .nav-btn {
+      display:block; margin-bottom:12px;
+      background:#1a73e8; color:#fff;
+      padding:10px 16px; border-radius:6px;
+      text-decoration:none;
+    }
+    .nav-btn:hover { background:#1557b0; color:#fff; }
+    table {
+      width:100%; background:#fff;
+      border-radius:12px; overflow:hidden;
+      box-shadow:0 4px 16px rgba(0,0,0,0.05);
+    }
+    th {
+      background:#1a73e8; color:#fff; padding:14px;
+      font-size:13px; text-transform:uppercase;
+    }
+    td { padding:14px; border-bottom:1px solid #e5e7eb; }
+    tr:hover { background:#f9fafb; }
+    .btn-action {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="left-panel">
+  <div class="logo">myCARe</div>
+  <a href="/" class="nav-btn">Trang chủ</a>
+  <a href="/quanly/nguoidung" class="nav-btn">Quản lý người dùng</a>
+
+  <div style="margin-top:40px;color:#6b7280;">
+    Quản lý dữ liệu chi phí phát sinh phục vụ thống kê.
+  </div>
+
+  <div style="margin-top:80px;padding:12px;background:#f8fafc;border-radius:8px;">
+    <strong><%= currentUser.tentaikhoan %></strong><br>
+    <span style="color:#6b7280;">Quản trị viên</span>
+  </div>
+</div>
+
+<div class="main-content">
+  <h3 style="margin-bottom:24px;">Danh sách chi phí phát sinh</h3>
+
+  <% if (chiPhiList.length === 0) { %>
+    <div class="alert alert-info">
+      Chưa có dữ liệu chi phí nào được người dùng nhập.
+    </div>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Người dùng</th>
+          <th>Phương tiện</th>
+          <th>Dịch vụ</th>
+          <th>Số tiền</th>
+          <th>Ngày phát sinh</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% chiPhiList.forEach((cp, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= cp.tentaikhoan %></td>
+            <td><%= cp.bien_so %></td>
+            <td><%= cp.ten_dich_vu %></td>
+            <td style="color:#dc2626;font-weight:600;">
+              <%= cp.so_tien.toLocaleString('vi-VN') %> VND
+            </td>
+            <td><%= new Date(cp.ngay_phat_sinh).toLocaleDateString('vi-VN') %></td>
+            <td>
+              <button class="btn btn-sm btn-primary btn-action" onclick="suaChiPhi(<%= cp.id %>, <%= cp.so_tien %>, '<%= cp.ten_dich_vu %>', '<%= new Date(cp.ngay_phat_sinh).toISOString().split('T')[0] %>')">
+                <i class="bi bi-pencil"></i> Sửa
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="xoaChiPhi(<%= cp.id %>)">
+                <i class="bi bi-trash"></i> Xóa
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<!-- Modal sửa chi phí -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Sửa chi phí</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="editId">
+          <div class="mb-3">
+            <label for="editSoTien" class="form-label">Số tiền (VND)</label>
+            <input type="number" class="form-control" id="editSoTien" min="0" required>
+          </div>
+          <div class="mb-3">
+            <label for="editNgayPhatSinh" class="form-label">Ngày phát sinh</label>
+            <input type="date" class="form-control" id="editNgayPhatSinh" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="luuChiPhi()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  let editModal;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    editModal = new bootstrap.Modal(document.getElementById('editModal'), {});
+  });
+
+  function suaChiPhi(id, soTien, dichVu, ngayPhatSinh) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editSoTien').value = soTien;
+    document.getElementById('editNgayPhatSinh').value = ngayPhatSinh;
+    editModal.show();
+  }
+
+  async function luuChiPhi() {
+    const id = document.getElementById('editId').value;
+    const soTien = parseFloat(document.getElementById('editSoTien').value);
+    const ngayPhatSinh = document.getElementById('editNgayPhatSinh').value;
+
+    if (!id || !soTien || !ngayPhatSinh) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/chi_phi/' + id, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          so_tien: soTien,
+          ngay_phat_sinh: ngayPhatSinh,
+          id_danh_muc: 1 // Giữ nguyên danh mục hiện tại
+        })
+      });
+
+      if (res.ok) {
+        alert('Cập nhật chi phí thành công');
+        location.reload();
+      } else {
+        const error = await res.json();
+        alert('Lỗi: ' + (error.error || 'Không thể cập nhật chi phí'));
+      }
+    } catch (err) {
+      console.error('Lỗi:', err);
+      alert('Có lỗi khi cập nhật chi phí');
+    }
+  }
+
+  async function xoaChiPhi(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa chi phí này?')) return;
+
+    const res = await fetch('/api/chi_phi/' + id, {
+      method: 'DELETE'
+    });
+
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert('Không thể xóa chi phí');
+    }
+  }
+</script>
+
+</body>
+</html>
+  
