@@ -763,9 +763,20 @@
       const stat = window.savedStats[idx];
       currentViewedStatId = stat.id;
       
-      const chiTietData = JSON.parse(stat.chi_tiet) || stat.chi_tiet;
-      const chiTiet = chiTietData.chi_tiet || [];
-      const tongChiPhi = chiTietData.tong_chi_phi || stat.tong_chi_phi;
+      let chiTiet = [];
+      let tongChiPhi = stat.tong_chi_phi;
+      
+      try {
+        const chiTietData = typeof stat.chi_tiet === 'string' ? JSON.parse(stat.chi_tiet) : stat.chi_tiet;
+        if (chiTietData) {
+          chiTiet = chiTietData.chi_tiet || [];
+          tongChiPhi = chiTietData.tong_chi_phi || stat.tong_chi_phi;
+        }
+      } catch (e) {
+        console.error('Lỗi parse chi_tiet:', e);
+        chiTiet = [];
+        tongChiPhi = stat.tong_chi_phi;
+      }
       
       let html = `
         <div style="margin-bottom: 16px;">
@@ -876,8 +887,26 @@
       const stat1 = savedStats[idx1];
       const stat2 = savedStats[idx2];
 
-      const chiTiet1 = JSON.parse(stat1.chi_tiet).chi_tiet || [];
-      const chiTiet2 = JSON.parse(stat2.chi_tiet).chi_tiet || [];
+      // Parse chi tiết - xử lý cả string JSON và object
+      let chiTiet1 = [];
+      let chiTiet2 = [];
+      
+      try {
+        const parsed1 = typeof stat1.chi_tiet === 'string' ? JSON.parse(stat1.chi_tiet) : stat1.chi_tiet;
+        chiTiet1 = (parsed1 && parsed1.chi_tiet) ? parsed1.chi_tiet : [];
+      } catch (e) {
+        console.error('Lỗi parse chi_tiet1:', e);
+        chiTiet1 = [];
+      }
+      
+      try {
+        const parsed2 = typeof stat2.chi_tiet === 'string' ? JSON.parse(stat2.chi_tiet) : stat2.chi_tiet;
+        chiTiet2 = (parsed2 && parsed2.chi_tiet) ? parsed2.chi_tiet : [];
+      } catch (e) {
+        console.error('Lỗi parse chi_tiet2:', e);
+        chiTiet2 = [];
+      }
+      
       const total1 = stat1.tong_chi_phi;
       const total2 = stat2.tong_chi_phi;
 
